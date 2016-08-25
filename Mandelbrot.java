@@ -2,12 +2,8 @@ package mandelbrot;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.image.PixelWriter;
-import javafx.scene.image.WritableImage;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 /**
@@ -23,9 +19,8 @@ public class Mandelbrot extends Application {
     final int SCREEN_HEIGHT = 1105;
 
 
-
     /**
-     * Method to start the application. Opens a window
+     * Method to start the application. Opens a window and creates all view objects
      * @param stage
      * @throws Exception
      */
@@ -36,13 +31,11 @@ public class Mandelbrot extends Application {
         BorderPane pane = new BorderPane();
         ImageView imageView = new ImageView();
 
-
         // Create the scene
         Scene scene = new Scene(pane, SCREEN_WIDTH, SCREEN_HEIGHT);
 
         // Add the canvas to the scene
         pane.setCenter(imageView);
-
 
         // Set all stage attributes
         stage.setScene(scene);
@@ -52,14 +45,18 @@ public class Mandelbrot extends Application {
 
         // Create new fractal and display it
         Fractal fractal = new Fractal(SCREEN_WIDTH, SCREEN_HEIGHT);
-        Image image = fractal.getImage();
+        imageView.setImage(fractal.getImage());
 
-        imageView.setImage(image);
-
-
+        // Create new controller and add event handlers
+        Controller controller = new Controller(fractal, imageView);
+        scene.setOnKeyPressed(event -> controller.handleKeyPress(event.getCode()));
     }
 
 
+    /**
+     * Main method. This is the entry point of the application.
+     * @param args
+     */
     public static void main(String[] args) {
         launch(args);
     }

@@ -7,6 +7,8 @@ import javafx.scene.paint.Color;
 
 /**
  * Created by kiran on 8/25/16.
+ *
+ * This class stores the image of a fractal as well as its current parameters. The viewpoint can be moved around and the fractal image can be regenerated.
  */
 public class Fractal {
 
@@ -18,6 +20,11 @@ public class Fractal {
 
     Image image;
 
+    /**
+     * Constructor
+     * @param width the width in pixels of the fractal
+     * @param height the height in pixels of the fractal
+     */
     public Fractal(int width, int height) {
 
         this.width = width;
@@ -35,12 +42,43 @@ public class Fractal {
 
 
 
-    /**
-     * get the fractal's current image
-     * @return
-     */
     public Image getImage() {
         return image;
+    }
+
+
+    /**
+     * These methods move the view of the fractal.
+     */
+
+    public void moveRight() {
+        xCenter +=  width / zoom / 10.0;
+        generate();
+    }
+
+    public void moveLeft() {
+        xCenter -=  width / zoom / 10.0;
+        generate();
+    }
+
+    public void moveUp() {
+        yCenter -=  height / zoom / 10.0;
+        generate();
+    }
+
+    public void moveDown() {
+        yCenter +=  height / zoom / 10.0;
+        generate();
+    }
+
+    public void zoomIn() {
+        zoom *= 2;
+        generate();
+    }
+
+    public void zoomOut() {
+        zoom /= 2;
+        generate();
     }
 
 
@@ -138,6 +176,12 @@ public class Fractal {
         image = newImage;
 
     }
+
+
+
+    /**
+     * These methods adjust coordinate values based on the screen, current position, and zoom level
+     */
 
     private double xScale(int x) {
         return (xCenter - width / zoom / 2.0) + (x / zoom);
