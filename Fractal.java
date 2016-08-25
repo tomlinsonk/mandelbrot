@@ -3,7 +3,7 @@ package mandelbrot;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
-import javafx.scene.paint.Color;
+import mandelbrot.brushes.ElegantBrush;
 
 /**
  * Created by kiran on 8/25/16.
@@ -17,8 +17,8 @@ public class Fractal {
     double zoom;
 
     int maxIterations;
-
     Image image;
+    Brush brush;
 
     /**
      * Constructor
@@ -35,9 +35,14 @@ public class Fractal {
         xCenter = -0.75;
         yCenter = 0;
         maxIterations = 1000;
+        brush = new ElegantBrush(maxIterations);
 
         // Create fractal
         generate();
+    }
+
+    public void setBrush(Brush brush) {
+        this.brush = brush;
     }
 
 
@@ -99,6 +104,7 @@ public class Fractal {
                 double x = 0;
                 double y = 0;
 
+                // TODO julia sets?
                 // Julia Sets
 //				double x0 = 0.0315;
 //				double y0 = -0.121;
@@ -132,44 +138,8 @@ public class Fractal {
                     iteration++;
                 }
 
-//                System.out.println(xPixel + ", " + yPixel +  " (" + x0 + ", " + y0 + ") -- " + iteration);
-
-                // TODO replace all this crap with brushes
-                pixels.setColor(xPixel, yPixel, Color.rgb(iteration == maxIterations ? 255 : ((iteration / 255) % 2 == 0 ? (iteration + 0) % 255 : 255 - ((iteration + 0) % 225)),
-                        iteration == maxIterations ? 255 : ((iteration / 255) % 2 == 0 ? (iteration + 0) % 255 : 255 - ((iteration + 0) % 225)),
-                        iteration == maxIterations ? 255 : ((iteration / 255) % 2 == 0 ? (iteration + 0) % 255 : 255 - ((iteration +  0) % 225))));
-
-
-                // Simple
-//				image.setRGB(pixelX, pixelY, new Color(iteration == maxIteration ? 255 : 0,
-//											   iteration == maxIteration ? 255 : 0,
-//			       							   iteration == maxIteration ? 255 : 0).getRGB());
-
-                // Interesting
-//                image.setRGB(pixelX, pixelY, new Color(iteration == maxIteration ? 255 : (iteration + 70) % 255,
-//                        iteration == maxIteration ? 255 : (iteration + 140) % 255,
-//                        iteration == maxIteration ? 255 : (iteration + 210) % 255).getRGB());
-
-                // Proper Rainbow
-//				image.setRGB(pixelX, pixelY, iteration == maxIteration ? new Color(255, 255, 255).getRGB() : pallete[iteration]);
-
-                // Black and white gradients
-//				image.setRGB(pixelX, pixelY, new Color(iteration == maxIteration ? 255 : ((iteration / 255) % 2 == 0 ? (iteration + 0) % 255 : 255 - ((iteration + 0) % 225)),
-//						   					   iteration == maxIteration ? 255 : ((iteration / 255) % 2 == 0 ? (iteration + 0) % 255 : 255 - ((iteration + 0) % 225)),
-//						   					   iteration == maxIteration ? 255 : ((iteration / 255) % 2 == 0 ? (iteration + 0) % 255 : 255 - ((iteration +  0) % 225))).getRGB());
-//
-                // Stripes
-//				int[] colors = {Color.white.getRGB(), Color.black.getRGB(), Color.red.getRGB()};
-//				image.setRGB(pixelX, pixelY, colors[iteration % 3]);
-
-                // Black, Red, White
-//				int outer = iteration % 255;
-//				outer = outer < 50 ? 0 : 255;
-//				image.setRGB(pixelX, pixelY, new Color(iteration == maxIteration ? 255 : outer,
-//											   iteration == maxIteration ? 255 : 0,
-//										       iteration == maxIteration ? 255 : 0).getRGB());
-
-
+                // Use the brush to pick a color
+                pixels.setColor(xPixel, yPixel, brush.getColor(iteration));
             }
         }
 

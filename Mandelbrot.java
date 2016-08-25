@@ -9,7 +9,7 @@ import javafx.stage.Stage;
 /**
  * Created by kiran on 8/24/16.
  *
- * This is the main class of the application. Calculates what pixels are in the set
+ * This is the main class of the application. Acts as the view in MVC
  * and draws the set.
  */
 public class Mandelbrot extends Application {
