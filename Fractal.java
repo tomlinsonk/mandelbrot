@@ -43,6 +43,7 @@ public class Fractal {
 
     public void setBrush(Brush brush) {
         this.brush = brush;
+        generate();
     }
 
 
@@ -92,6 +93,8 @@ public class Fractal {
      * Method to generate the fractal based on current state.
      */
     private void generate() {
+        long startTime = System.currentTimeMillis();
+
         WritableImage newImage = new WritableImage((int)width, (int)height);
         PixelWriter pixels = newImage.getPixelWriter();
 
@@ -144,6 +147,10 @@ public class Fractal {
         }
 
         image = newImage;
+
+        long endTime = System.currentTimeMillis();
+        long duration = (endTime - startTime);
+        System.out.println("Completed in: " + duration + "ms");
 
     }
 

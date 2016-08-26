@@ -5,11 +5,6 @@ import mandelbrot.Brush;
 
 /**
  * Created by kiran on 8/25/16.
- *
- * Default brush is very boring.
- *
- * Black: not in set
- * White: in set (at this iteration level)
  */
 public class DefaultBrush extends Brush {
 

@@ -1,12 +1,12 @@
 package mandelbrot;
 
 import javafx.application.Application;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.ComboBox;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 /**
@@ -54,10 +54,18 @@ public class Mandelbrot extends Application {
 
         // Create toolbar
         toolbar.setPrefWidth(SCREEN_WIDTH / 5);
+        toolbar.setAlignment(Pos.CENTER);
+
+        ComboBox<String> brushList = new ComboBox<String>();
+        brushList.getItems().addAll("Default", "Elegant", "Smooth", "Rainbow", "Random");
+        brushList.setValue("Default");
+
+        toolbar.getChildren().addAll(brushList);
 
         // Create new controller and add event handlers
         Controller controller = new Controller(fractal, imageView);
         scene.setOnKeyPressed(event -> controller.handleKeyPress(event.getCode()));
+        brushList.valueProperty().addListener((observable, oldValue, newValue) -> controller.updateBrush(newValue));
     }
 
 

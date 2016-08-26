@@ -2,6 +2,7 @@ package mandelbrot;
 
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
+import mandelbrot.brushes.*;
 
 
 /**
@@ -54,4 +55,28 @@ public class Controller {
     }
 
 
+    public void updateBrush(String brushName) {
+
+        switch (brushName) {
+            case "Default":
+                fractal.setBrush(new DefaultBrush(fractal.maxIterations));
+                break;
+            case "Elegant":
+                fractal.setBrush(new ElegantBrush(fractal.maxIterations));
+                break;
+            case "Rainbow":
+                fractal.setBrush(new RainbowBrush(fractal.maxIterations));
+                break;
+            case "Random":
+                fractal.setBrush(new RandomBrush(fractal.maxIterations));
+                break;
+            case "Smooth":
+                fractal.setBrush(new SmoothBrush(fractal.maxIterations));
+                break;
+            default:
+                return;
+        }
+
+        imageView.setImage(fractal.getImage());
+    }
 }
