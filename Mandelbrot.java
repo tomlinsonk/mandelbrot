@@ -67,8 +67,8 @@ public class Mandelbrot extends Application {
 
         // Create brush picker
         ComboBox<String> brushList = new ComboBox<>();
-        brushList.getItems().addAll("Elegant", "Smooth", "Binary", "Tropical", "Banded");
-        brushList.setValue("Elegant");
+        brushList.getItems().addAll("Smooth", "Elegant", "Binary", "Tropical", "Banded");
+        brushList.setValue("Smooth");
 
         // Create progress indicator
         ProgressIndicator indicator = new ProgressIndicator(0);

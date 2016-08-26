@@ -7,7 +7,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
-import mandelbrot.brushes.ElegantBrush;
+import mandelbrot.brushes.SmoothBrush;
 
 /**
  * Created by Kiran Tomlinson on 8/25/16.
@@ -51,7 +51,7 @@ public class Fractal {
         xCenter = -0.75;
         yCenter = 0;
         maxIterations = 1000;
-        brush = new ElegantBrush(maxIterations);
+        brush = new SmoothBrush(maxIterations);
 
         // Create fractal
         generate();
