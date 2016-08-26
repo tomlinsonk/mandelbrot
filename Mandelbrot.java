@@ -2,18 +2,23 @@ package mandelbrot;
 
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.Slider;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import mandelbrot.brushes.*;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Created by Kiran Tomlinson on 8/24/16.
@@ -86,15 +91,33 @@ public class Mandelbrot extends Application {
         sliderLabel.textProperty().bind(Bindings.format("Max Iterations: %.0f", slider.valueProperty()));
         sliderPane.getChildren().addAll(sliderLabel, slider);
 
+        // Create save button
+        Button saveButton = new Button("Save Image");
+        final FileChooser fileChooser = new FileChooser();
+        saveButton.setOnAction(event -> {
+            File file = fileChooser.showSaveDialog(stage);
+            if (file != null) saveToFile(imageView.getImage(), file);
+        });
+
         // Create new fractal
         fractal = new Fractal(SCREEN_WIDTH * 7 / 8, SCREEN_HEIGHT, imageView, indicator);
 
-        toolbar.getChildren().addAll(indicator, brushList, sliderPane);
+        toolbar.getChildren().addAll(indicator, brushList, sliderPane, saveButton);
 
         // Create event handlers
         scene.setOnKeyPressed(event -> handleKeyPress(event.getCode()));
         brushList.valueProperty().addListener((observable, oldValue, newValue) -> updateBrush(newValue));
         slider.setOnMouseReleased(event -> fractal.setMaxIterations((int)slider.getValue()));
+    }
+
+    private void saveToFile(Image image, File file) {
+        BufferedImage bImage = SwingFXUtils.fromFXImage(image, null);
+
+        try {
+            ImageIO.write(bImage, "png", file);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
