@@ -6,7 +6,7 @@ import mandelbrot.Brush;
 import java.util.Random;
 
 /**
- * Created by kiran on 8/25/16.
+ * Created by Kiran Tomlinson on 8/25/16.
  */
 public class RandomBrush extends Brush {
 

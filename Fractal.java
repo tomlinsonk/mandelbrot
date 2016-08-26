@@ -10,7 +10,7 @@ import javafx.scene.image.WritableImage;
 import mandelbrot.brushes.ElegantBrush;
 
 /**
- * Created by kiran on 8/25/16.
+ * Created by Kiran Tomlinson on 8/25/16.
  *
  * This class stores the image of a fractal as well as its current parameters. The viewpoint can be moved around and the fractal image can be regenerated.
  */
@@ -57,6 +57,11 @@ public class Fractal {
         generate();
     }
 
+
+    /**
+     * Set the max iterations of the fractal and the brush
+     * @param maxIterations
+     */
     public void setMaxIterations(int maxIterations) {
         if (rendering) return;
         this.maxIterations = maxIterations;
@@ -64,6 +69,10 @@ public class Fractal {
         generate();
     }
 
+    /**
+     * Change the brush being used to paint the fractal
+     * @param brush
+     */
     public void setBrush(Brush brush) {
         if (rendering) return;
         this.brush = brush;

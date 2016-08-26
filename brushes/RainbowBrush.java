@@ -4,7 +4,7 @@ import javafx.scene.paint.Color;
 import mandelbrot.Brush;
 
 /**
- * Created by kiran on 8/25/16.
+ * Created by Kiran Tomlinson on 8/25/16.
  */
 public class RainbowBrush extends Brush {
 
