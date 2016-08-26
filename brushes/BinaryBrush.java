@@ -6,9 +6,9 @@ import mandelbrot.Brush;
 /**
  * Created by kiran on 8/25/16.
  */
-public class DefaultBrush extends Brush {
+public class BinaryBrush extends Brush {
 
-    public DefaultBrush(int maxIterations) {
+    public BinaryBrush(int maxIterations) {
         super(maxIterations);
     }
 

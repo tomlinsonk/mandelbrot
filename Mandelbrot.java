@@ -4,10 +4,13 @@ import javafx.application.Application;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import mandelbrot.brushes.*;
 
 /**
  * Created by kiran on 8/24/16.
@@ -21,6 +24,7 @@ public class Mandelbrot extends Application {
     final int SCREEN_WIDTH = 1920;
     final int SCREEN_HEIGHT = 1105;
 
+    Fractal fractal;
 
     /**
      * Method to start the application. Opens a window and creates all view objects
@@ -48,24 +52,84 @@ public class Mandelbrot extends Application {
         stage.setResizable(false);
         stage.show();
 
-        // Create new fractal and display it
-        Fractal fractal = new Fractal(SCREEN_WIDTH * 4 / 5, SCREEN_HEIGHT);
-        imageView.setImage(fractal.getImage());
-
         // Create toolbar
-        toolbar.setPrefWidth(SCREEN_WIDTH / 5);
+        toolbar.setPrefWidth(SCREEN_WIDTH / 8);
+        toolbar.setSpacing(SCREEN_HEIGHT / 10);
         toolbar.setAlignment(Pos.CENTER);
 
         ComboBox<String> brushList = new ComboBox<String>();
-        brushList.getItems().addAll("Default", "Elegant", "Smooth", "Rainbow", "Random");
-        brushList.setValue("Default");
+        brushList.getItems().addAll("Elegant", "Binary", "Smooth", "Rainbow", "Random");
+        brushList.setValue("Elegant");
 
-        toolbar.getChildren().addAll(brushList);
+        ProgressIndicator indicator = new ProgressIndicator(0);
+        indicator.setPrefSize(SCREEN_WIDTH / 10, SCREEN_HEIGHT / 10);
+        indicator.setVisible(true);
 
-        // Create new controller and add event handlers
-        Controller controller = new Controller(fractal, imageView);
-        scene.setOnKeyPressed(event -> controller.handleKeyPress(event.getCode()));
-        brushList.valueProperty().addListener((observable, oldValue, newValue) -> controller.updateBrush(newValue));
+        // Create new fractal
+        fractal = new Fractal(SCREEN_WIDTH * 7 / 8, SCREEN_HEIGHT, imageView, indicator);
+
+        toolbar.getChildren().addAll(indicator, brushList);
+
+        // Create event handlers
+        scene.setOnKeyPressed(event -> handleKeyPress(event.getCode()));
+        brushList.valueProperty().addListener((observable, oldValue, newValue) -> updateBrush(newValue));
+    }
+
+
+    /**
+     * Handles keyboard input to and adjusts the model and view accordingly
+     * @param key the key that was pressed
+     */
+    public void handleKeyPress(KeyCode key) {
+
+
+
+        switch (key) {
+            case A:
+                fractal.moveLeft();
+                break;
+            case D:
+                fractal.moveRight();
+                break;
+            case S:
+                fractal.moveDown();
+                break;
+            case W:
+                fractal.moveUp();
+                break;
+            case EQUALS:
+                fractal.zoomIn();
+                break;
+            case MINUS:
+                fractal.zoomOut();
+                break;
+            default:
+                return;
+        }
+    }
+
+
+    public void updateBrush(String brushName) {
+
+        switch (brushName) {
+            case "Binary":
+                fractal.setBrush(new BinaryBrush(fractal.maxIterations));
+                break;
+            case "Elegant":
+                fractal.setBrush(new ElegantBrush(fractal.maxIterations));
+                break;
+            case "Rainbow":
+                fractal.setBrush(new RainbowBrush(fractal.maxIterations));
+                break;
+            case "Random":
+                fractal.setBrush(new RandomBrush(fractal.maxIterations));
+                break;
+            case "Smooth":
+                fractal.setBrush(new SmoothBrush(fractal.maxIterations));
+                break;
+            default:
+                return;
+        }
     }
 
 

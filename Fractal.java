@@ -1,6 +1,10 @@
 package mandelbrot;
 
+import javafx.application.Platform;
+import javafx.concurrent.Task;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import mandelbrot.brushes.ElegantBrush;
@@ -17,21 +21,33 @@ public class Fractal {
     double zoom;
 
     int maxIterations;
+    boolean rendering;
     Image image;
     Brush brush;
+
+    ImageView imageView;
+    ProgressIndicator indicator;
+
+
 
     /**
      * Constructor
      * @param width the width in pixels of the fractal
      * @param height the height in pixels of the fractal
+     * @param imageView the view this fractal is displayed in
+     * @param indicator the progress indicator
      */
-    public Fractal(int width, int height) {
+    public Fractal(int width, int height, ImageView imageView, ProgressIndicator indicator) {
 
         this.width = width;
         this.height = height;
+        this.imageView = imageView;
+        this.indicator = indicator;
+
 
         // Default values
         zoom = 400;
+        rendering = false;
         xCenter = -0.75;
         yCenter = 0;
         maxIterations = 1000;
@@ -42,47 +58,48 @@ public class Fractal {
     }
 
     public void setBrush(Brush brush) {
+        if (rendering) return;
         this.brush = brush;
         generate();
     }
 
-
-
-    public Image getImage() {
-        return image;
-    }
-
-
     /**
      * These methods move the view of the fractal.
+     * These methods will not run while a fractal is rendering.
      */
 
     public void moveRight() {
+        if (rendering) return;
         xCenter +=  width / zoom / 10.0;
         generate();
     }
 
     public void moveLeft() {
+        if (rendering) return;
         xCenter -=  width / zoom / 10.0;
         generate();
     }
 
     public void moveUp() {
+        if (rendering) return;
         yCenter -=  height / zoom / 10.0;
         generate();
     }
 
     public void moveDown() {
+        if (rendering) return;
         yCenter +=  height / zoom / 10.0;
         generate();
     }
 
     public void zoomIn() {
+        if (rendering) return;
         zoom *= 2;
         generate();
     }
 
     public void zoomOut() {
+        if (rendering) return;
         zoom /= 2;
         generate();
     }
@@ -91,80 +108,87 @@ public class Fractal {
 
     /**
      * Method to generate the fractal based on current state.
+     * Uses a task so it runs in the background and sends progress to the indicator.
      */
     private void generate() {
-        long startTime = System.currentTimeMillis();
 
-        WritableImage newImage = new WritableImage((int)width, (int)height);
-        PixelWriter pixels = newImage.getPixelWriter();
+        Task generateFractal = new Task<Void>() {
 
-        for (int xPixel = 0; xPixel < width; xPixel++) {
-            for (int yPixel = 0; yPixel < height; yPixel++) {
+            @Override
+            protected Void call() {
 
-                double x0 = xScale(xPixel);
-                double y0 = yScale(yPixel);
+                // Don't allow other updates while rendering
+                Platform.runLater(() -> rendering = true);
 
-                double x = 0;
-                double y = 0;
+                // Create image
+                WritableImage newImage = new WritableImage((int)width, (int)height);
+                PixelWriter pixels = newImage.getPixelWriter();
 
-                // TODO julia sets?
-                // Julia Sets
-//				double x0 = 0.0315;
-//				double y0 = -0.121;
+                // Iterate over every pixel on the screen, figure out if it's in the set, and color it
+                for (int xPixel = 0; xPixel < width; xPixel++) {
+                    for (int yPixel = 0; yPixel < height; yPixel++) {
+
+                        double x0 = (xCenter - width / zoom / 2.0) + (xPixel / zoom);
+                        double y0 = (yCenter - height / zoom / 2.0) + (yPixel / zoom);
+
+                        double x = 0;
+                        double y = 0;
+
+                        // TODO julia sets?
+//			         	double x0 = 0.0315;
+//				        double y0 = -0.121;
 //
-//				double x = xScale(pixelX, xCenter, xZoom);
-//				double y = yScale(pixelY, yCenter, yZoom);
-//
-                double xSqr = x * x;
-                double ySqr = y * y;
+//				        double x = (xCenter - width / zoom / 2.0) + (xPixel / zoom);
+//                      double y = (yCenter - height / zoom / 2.0) + (yPixel / zoom);
 
-                double xLast = 0;
-                double yLast = 0;
+                        double xSqr = x * x;
+                        double ySqr = y * y;
 
-                int iteration = 0;
+                        double xLast = 0;
+                        double yLast = 0;
 
-                while (xSqr + ySqr < 4 && iteration < maxIterations) {
-                    y *= x;
-                    y += y;
-                    y += y0;
-                    x = xSqr - ySqr + x0;
-                    xSqr = x * x;
-                    ySqr = y * y;
+                        int iteration = 0;
 
-                    if (x == xLast && y == yLast) {
-                        iteration = maxIterations;
-                        break;
+                        while (xSqr + ySqr < 4 && iteration < maxIterations) {
+                            y *= x;
+                            y += y;
+                            y += y0;
+                            x = xSqr - ySqr + x0;
+                            xSqr = x * x;
+                            ySqr = y * y;
+
+                            if (x == xLast && y == yLast) {
+                                iteration = maxIterations;
+                                break;
+                            }
+
+                            xLast = x;
+                            yLast = y;
+                            iteration++;
+                        }
+
+                        // Use the brush to pick a color
+                        pixels.setColor(xPixel, yPixel, brush.getColor(iteration));
                     }
 
-                    xLast = x;
-                    yLast = y;
-                    iteration++;
+                    // Update the progress of this task
+                    updateProgress(xPixel, width);
                 }
 
-                // Use the brush to pick a color
-                pixels.setColor(xPixel, yPixel, brush.getColor(iteration));
+                // Send the new image to the view
+                image = newImage;
+                Platform.runLater(() -> {
+                    imageView.setImage(image);
+                    rendering = false;
+                });
+
+                return null;
             }
-        }
-
-        image = newImage;
-
-        long endTime = System.currentTimeMillis();
-        long duration = (endTime - startTime);
-        System.out.println("Completed in: " + duration + "ms");
-
-    }
+        };
 
 
-
-    /**
-     * These methods adjust coordinate values based on the screen, current position, and zoom level
-     */
-
-    private double xScale(int x) {
-        return (xCenter - width / zoom / 2.0) + (x / zoom);
-    }
-
-    private double yScale(int y) {
-        return (yCenter - height / zoom / 2.0) + (y / zoom);
+        // Bind the indicator to the task and start it
+        indicator.progressProperty().bind(generateFractal.progressProperty());
+        new Thread(generateFractal).start();
     }
 }
