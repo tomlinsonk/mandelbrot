@@ -184,7 +184,7 @@ public class Fractal {
                         }
 
                         // Use the brush to pick a color
-                        pixels.setColor(xPixel, yPixel, brush.getColor(iteration));
+                        pixels.setColor(xPixel, yPixel, brush.getColor(iteration, Math.sqrt(xSqr + ySqr)));
                     }
 
                     // Update the progress of this task

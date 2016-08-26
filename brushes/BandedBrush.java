@@ -8,11 +8,11 @@ import java.util.Random;
 /**
  * Created by Kiran Tomlinson on 8/25/16.
  */
-public class RandomBrush extends Brush {
+public class BandedBrush extends Brush {
 
     Color[] randomColors;
 
-    public RandomBrush(int maxIterations) {
+    public BandedBrush(int maxIterations) {
         super(maxIterations);
 
         Random random = new Random();
@@ -24,9 +24,9 @@ public class RandomBrush extends Brush {
     }
 
     @Override
-    public Color getColor(int iteration) {
+    public Color getColor(int iteration, double escapeMagnitude) {
         if (iteration == maxIterations) {
-            return Color.WHITE;
+            return Color.BLACK;
         }
 
         return randomColors[iteration];
