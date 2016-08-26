@@ -1,9 +1,11 @@
 package mandelbrot;
 
 import javafx.application.Application;
+import javafx.beans.binding.Bindings;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.Slider;
 import javafx.scene.image.ImageView;
@@ -69,6 +71,8 @@ public class Mandelbrot extends Application {
         indicator.setVisible(true);
 
         // Create iteration slider
+        VBox sliderPane = new VBox();
+        sliderPane.setAlignment(Pos.CENTER);
         Slider slider = new Slider();
         slider.setMin(0);
         slider.setMax(2000);
@@ -78,11 +82,14 @@ public class Mandelbrot extends Application {
         slider.setShowTickLabels(true);
         slider.setMaxWidth(SCREEN_WIDTH / 9);
         slider.setValue(1000);
+        Label sliderLabel = new Label();
+        sliderLabel.textProperty().bind(Bindings.format("Max Iterations: %.0f", slider.valueProperty()));
+        sliderPane.getChildren().addAll(sliderLabel, slider);
 
         // Create new fractal
         fractal = new Fractal(SCREEN_WIDTH * 7 / 8, SCREEN_HEIGHT, imageView, indicator);
 
-        toolbar.getChildren().addAll(indicator, brushList, slider);
+        toolbar.getChildren().addAll(indicator, brushList, sliderPane);
 
         // Create event handlers
         scene.setOnKeyPressed(event -> handleKeyPress(event.getCode()));
