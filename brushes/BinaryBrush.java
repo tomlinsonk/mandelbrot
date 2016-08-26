@@ -14,12 +14,12 @@ public class BinaryBrush extends Brush {
 
 
     @Override
-    public Color getColor(int iteration) {
+    public Color getColor(int iteration, double escapeMagnitude) {
 
         if (iteration == maxIterations) {
-            return Color.WHITE;
+            return Color.BLACK;
         }
 
-        return Color.BLACK;
+        return Color.WHITE;
     }
 }

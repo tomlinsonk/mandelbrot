@@ -6,9 +6,9 @@ import mandelbrot.Brush;
 /**
  * Created by Kiran Tomlinson on 8/25/16.
  */
-public class SmoothBrush extends Brush {
+public class TropicalBrush extends Brush {
 
-    public SmoothBrush(int maxIterations) {
+    public TropicalBrush(int maxIterations) {
         super(maxIterations);
     }
 
@@ -19,9 +19,6 @@ public class SmoothBrush extends Brush {
             return Color.BLACK;
         }
 
-        double smooth = iteration + 1 - Math.log(Math.log(escapeMagnitude))/Math.log(2);
-
-
-        return Color.hsb(0.95f + 10 * smooth ,0.6f,1.0f);
+        return Color.hsb(iteration % 360, 0.8, 0.8);
     }
 }

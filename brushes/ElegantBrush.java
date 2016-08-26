@@ -13,9 +13,9 @@ public class ElegantBrush extends Brush {
     }
 
     @Override
-    public Color getColor(int iteration) {
+    public Color getColor(int iteration,  double escapeMagnitude) {
         if (iteration == maxIterations) {
-            return Color.WHITE;
+            return Color.BLACK;
         }
 
         int lum = iteration % 255;

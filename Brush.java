@@ -16,5 +16,5 @@ public abstract class Brush {
         this.maxIterations = maxIterations;
     }
 
-    public abstract Color getColor(int iteration);
+    public abstract Color getColor(int iteration, double escapeMagnitude);
 }

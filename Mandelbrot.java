@@ -61,8 +61,8 @@ public class Mandelbrot extends Application {
         toolbar.setAlignment(Pos.CENTER);
 
         // Create brush picker
-        ComboBox<String> brushList = new ComboBox<String>();
-        brushList.getItems().addAll("Elegant", "Binary", "Smooth", "Rainbow", "Random");
+        ComboBox<String> brushList = new ComboBox<>();
+        brushList.getItems().addAll("Elegant", "Smooth", "Binary", "Tropical", "Banded");
         brushList.setValue("Elegant");
 
         // Create progress indicator
@@ -138,11 +138,11 @@ public class Mandelbrot extends Application {
             case "Elegant":
                 fractal.setBrush(new ElegantBrush(fractal.maxIterations));
                 break;
-            case "Rainbow":
-                fractal.setBrush(new RainbowBrush(fractal.maxIterations));
+            case "Banded":
+                fractal.setBrush(new BandedBrush(fractal.maxIterations));
                 break;
-            case "Random":
-                fractal.setBrush(new RandomBrush(fractal.maxIterations));
+            case "Tropical":
+                fractal.setBrush(new TropicalBrush(fractal.maxIterations));
                 break;
             case "Smooth":
                 fractal.setBrush(new SmoothBrush(fractal.maxIterations));
