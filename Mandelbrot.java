@@ -5,6 +5,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.Slider;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
@@ -57,22 +58,36 @@ public class Mandelbrot extends Application {
         toolbar.setSpacing(SCREEN_HEIGHT / 10);
         toolbar.setAlignment(Pos.CENTER);
 
+        // Create brush picker
         ComboBox<String> brushList = new ComboBox<String>();
         brushList.getItems().addAll("Elegant", "Binary", "Smooth", "Rainbow", "Random");
         brushList.setValue("Elegant");
 
+        // Create progress indicator
         ProgressIndicator indicator = new ProgressIndicator(0);
         indicator.setPrefSize(SCREEN_WIDTH / 10, SCREEN_HEIGHT / 10);
         indicator.setVisible(true);
 
+        // Create iteration slider
+        Slider slider = new Slider();
+        slider.setMin(0);
+        slider.setMax(2000);
+        slider.setMajorTickUnit(500);
+        slider.setMinorTickCount(5);
+        slider.setShowTickMarks(true);
+        slider.setShowTickLabels(true);
+        slider.setMaxWidth(SCREEN_WIDTH / 9);
+        slider.setValue(1000);
+
         // Create new fractal
         fractal = new Fractal(SCREEN_WIDTH * 7 / 8, SCREEN_HEIGHT, imageView, indicator);
 
-        toolbar.getChildren().addAll(indicator, brushList);
+        toolbar.getChildren().addAll(indicator, brushList, slider);
 
         // Create event handlers
         scene.setOnKeyPressed(event -> handleKeyPress(event.getCode()));
         brushList.valueProperty().addListener((observable, oldValue, newValue) -> updateBrush(newValue));
+        slider.setOnMouseReleased(event -> fractal.setMaxIterations((int)slider.getValue()));
     }
 
 
@@ -80,9 +95,7 @@ public class Mandelbrot extends Application {
      * Handles keyboard input to and adjusts the model and view accordingly
      * @param key the key that was pressed
      */
-    public void handleKeyPress(KeyCode key) {
-
-
+    private void handleKeyPress(KeyCode key) {
 
         switch (key) {
             case A:
@@ -109,7 +122,7 @@ public class Mandelbrot extends Application {
     }
 
 
-    public void updateBrush(String brushName) {
+    private void updateBrush(String brushName) {
 
         switch (brushName) {
             case "Binary":

@@ -57,6 +57,13 @@ public class Fractal {
         generate();
     }
 
+    public void setMaxIterations(int maxIterations) {
+        if (rendering) return;
+        this.maxIterations = maxIterations;
+        brush.maxIterations = maxIterations;
+        generate();
+    }
+
     public void setBrush(Brush brush) {
         if (rendering) return;
         this.brush = brush;
