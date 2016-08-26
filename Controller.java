@@ -14,7 +14,6 @@ public class Controller {
     Fractal fractal;
     ImageView imageView;
 
-
     public Controller(Fractal fractal, ImageView imageView) {
         this.fractal = fractal;
         this.imageView = imageView;
@@ -51,6 +50,7 @@ public class Controller {
         }
 
         imageView.setImage(fractal.getImage());
+
     }
 
 

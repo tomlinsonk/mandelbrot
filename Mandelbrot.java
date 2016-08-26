@@ -3,7 +3,10 @@ package mandelbrot;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 /**
@@ -30,12 +33,14 @@ public class Mandelbrot extends Application {
         // Create all JavaFX objects
         BorderPane pane = new BorderPane();
         ImageView imageView = new ImageView();
+        VBox toolbar = new VBox();
 
         // Create the scene
         Scene scene = new Scene(pane, SCREEN_WIDTH, SCREEN_HEIGHT);
 
         // Add the canvas to the scene
         pane.setCenter(imageView);
+        pane.setRight(toolbar);
 
         // Set all stage attributes
         stage.setScene(scene);
@@ -44,8 +49,11 @@ public class Mandelbrot extends Application {
         stage.show();
 
         // Create new fractal and display it
-        Fractal fractal = new Fractal(SCREEN_WIDTH, SCREEN_HEIGHT);
+        Fractal fractal = new Fractal(SCREEN_WIDTH * 4 / 5, SCREEN_HEIGHT);
         imageView.setImage(fractal.getImage());
+
+        // Create toolbar
+        toolbar.setPrefWidth(SCREEN_WIDTH / 5);
 
         // Create new controller and add event handlers
         Controller controller = new Controller(fractal, imageView);
