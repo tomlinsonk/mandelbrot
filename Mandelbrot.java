@@ -76,9 +76,9 @@ public class Mandelbrot extends Application {
         brushPane.getChildren().addAll(brushLabel, brushList);
 
         // Create progress indicator
-        ProgressIndicator indicator = new ProgressIndicator(0);
-        indicator.setPrefSize(SCREEN_WIDTH / 10, SCREEN_HEIGHT / 10);
-        indicator.setVisible(true);
+        ProgressIndicator renderIndicator = new ProgressIndicator(0);
+        renderIndicator.setPrefSize(SCREEN_WIDTH / 10, SCREEN_HEIGHT / 10);
+        renderIndicator.setVisible(true);
 
         // Create iteration slider
         VBox sliderPane = new VBox();
@@ -107,9 +107,14 @@ public class Mandelbrot extends Application {
         });
 
         // Create new fractal
-        fractal = new Fractal(SCREEN_WIDTH * 7 / 8, SCREEN_HEIGHT, imageView, indicator);
+        fractal = new Fractal(SCREEN_WIDTH * 7 / 8, SCREEN_HEIGHT, imageView, renderIndicator);
 
-        toolbar.getChildren().addAll(indicator, brushPane, sliderPane, saveButton);
+        // Create zoom indicator
+        Label zoomIndicator = new Label();
+        zoomIndicator.textProperty().bind(Bindings.format("Zoom: %.2G", fractal.zoomProperty));
+
+        // Add all items to toolbar
+        toolbar.getChildren().addAll(zoomIndicator, renderIndicator, brushPane, sliderPane, saveButton);
 
         // Create event handlers
         scene.setOnKeyPressed(event -> handleKeyPress(event.getCode()));
@@ -156,6 +161,8 @@ public class Mandelbrot extends Application {
             default:
                 return;
         }
+
+
     }
 
 

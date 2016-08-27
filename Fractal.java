@@ -1,6 +1,8 @@
 package mandelbrot;
 
 import javafx.application.Platform;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.concurrent.Task;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.Image;
@@ -17,8 +19,11 @@ import mandelbrot.brushes.SmoothBrush;
 public class Fractal {
 
     double width, height;
-    double xCenter, yCenter;
+    double reCenter, imCenter;
     double zoom;
+
+    // This property is used for displaying the zoom level
+    DoubleProperty zoomProperty;
 
     int maxIterations;
     boolean rendering;
@@ -47,9 +52,10 @@ public class Fractal {
 
         // Default values
         zoom = 400;
+        zoomProperty = new SimpleDoubleProperty(1);
         rendering = false;
-        xCenter = -0.75;
-        yCenter = 0;
+        reCenter = -0.75;
+        imCenter = 0;
         maxIterations = 1000;
         brush = new SmoothBrush(maxIterations);
 
@@ -86,37 +92,39 @@ public class Fractal {
 
     public void moveRight() {
         if (rendering) return;
-        xCenter +=  width / zoom / 10.0;
+        reCenter +=  width / zoom / 10.0;
         generate();
     }
 
     public void moveLeft() {
         if (rendering) return;
-        xCenter -=  width / zoom / 10.0;
+        reCenter -=  width / zoom / 10.0;
         generate();
     }
 
     public void moveUp() {
         if (rendering) return;
-        yCenter -=  height / zoom / 10.0;
+        imCenter -=  height / zoom / 10.0;
         generate();
     }
 
     public void moveDown() {
         if (rendering) return;
-        yCenter +=  height / zoom / 10.0;
+        imCenter +=  height / zoom / 10.0;
         generate();
     }
 
     public void zoomIn() {
         if (rendering) return;
         zoom *= 2;
+        zoomProperty.set(zoomProperty.get() * 2);
         generate();
     }
 
     public void zoomOut() {
         if (rendering) return;
         zoom /= 2;
+        zoomProperty.set(zoomProperty.get() / 2);
         generate();
     }
 
@@ -141,54 +149,52 @@ public class Fractal {
                 PixelWriter pixels = newImage.getPixelWriter();
 
                 // Iterate over every pixel on the screen, figure out if it's in the set, and color it
-                for (int xPixel = 0; xPixel < width; xPixel++) {
-                    for (int yPixel = 0; yPixel < height; yPixel++) {
+                for (int rePixel = 0; rePixel < width; rePixel++) {
+                    for (int imPixel = 0; imPixel < height; imPixel++) {
 
-                        double x0 = (xCenter - width / zoom / 2.0) + (xPixel / zoom);
-                        double y0 = (yCenter - height / zoom / 2.0) + (yPixel / zoom);
+                        double re0 = (reCenter - width / zoom / 2.0) + (rePixel / zoom);
+                        double im0 = (imCenter - height / zoom / 2.0) + (imPixel / zoom);
 
-                        double x = 0;
-                        double y = 0;
+                        double re = 0;
+                        double im = 0;
 
                         // TODO julia sets?
-//			         	double x0 = 0.0315;
-//				        double y0 = -0.121;
+//			         	double re0 = 0.0315;
+//				        double im0 = -0.121;
 //
-//				        double x = (xCenter - width / zoom / 2.0) + (xPixel / zoom);
-//                      double y = (yCenter - height / zoom / 2.0) + (yPixel / zoom);
+//				        double re = (reCenter - width / zoom / 2.0) + (rePixel / zoom);
+//                      double im = (imCenter - height / zoom / 2.0) + (imPixel / zoom);
 
-                        double xSqr = x * x;
-                        double ySqr = y * y;
+                        double reSqr = re * re;
+                        double imSqr = im * im;
 
-                        double xLast = 0;
-                        double yLast = 0;
+                        double reLast = 0;
+                        double imLast = 0;
 
                         int iteration = 0;
 
-                        while (xSqr + ySqr < 4 && iteration < maxIterations) {
-                            y *= x;
-                            y += y;
-                            y += y0;
-                            x = xSqr - ySqr + x0;
-                            xSqr = x * x;
-                            ySqr = y * y;
+                        while (reSqr + imSqr < 4 && iteration < maxIterations) {
+                            im = 2 * (re * im) + im0;
+                            re = reSqr - imSqr + re0;
+                            reSqr = re * re;
+                            imSqr = im * im;
 
-                            if (x == xLast && y == yLast) {
+                            if (re == reLast && im == imLast) {
                                 iteration = maxIterations;
                                 break;
                             }
 
-                            xLast = x;
-                            yLast = y;
+                            reLast = re;
+                            imLast = im;
                             iteration++;
                         }
 
                         // Use the brush to pick a color
-                        pixels.setColor(xPixel, yPixel, brush.getColor(iteration, Math.sqrt(xSqr + ySqr)));
+                        pixels.setColor(rePixel, imPixel, brush.getColor(iteration, Math.sqrt(reSqr + imSqr)));
                     }
 
                     // Update the progress of this task
-                    updateProgress(xPixel, width);
+                    updateProgress(rePixel, width);
                 }
 
                 // Send the new image to the view

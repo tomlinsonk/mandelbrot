@@ -19,9 +19,9 @@ public class SmoothBrush extends Brush {
             return Color.BLACK;
         }
 
-        double smooth = iteration + 1 - Math.log(Math.log(escapeMagnitude))/Math.log(2);
+        double smooth = iteration + 1 - Math.log(Math.log(escapeMagnitude)) / Math.log(2);
 
 
-        return Color.hsb(0.95f + 10 * smooth ,0.6f,1.0f);
+        return Color.hsb(10f * smooth, 0.6f, 1.0f);
     }
 }
