@@ -125,6 +125,11 @@ public class Mandelbrot extends Application {
         slider.setOnMouseReleased(event -> fractal.setMaxIterations((int)slider.getValue()));
     }
 
+    /**
+     * Saves an image to a file
+     * @param image the image to save
+     * @param file the file to save to
+     */
     private void saveToFile(Image image, File file) {
         BufferedImage bImage = SwingFXUtils.fromFXImage(image, null);
 
@@ -169,6 +174,10 @@ public class Mandelbrot extends Application {
     }
 
 
+    /**
+     * Sets a new brush to repaint the fractal with
+     * @param brushName the name of the new brush
+     */
     private void updateBrush(String brushName) {
 
         switch (brushName) {

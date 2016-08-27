@@ -159,8 +159,8 @@ public class Fractal {
                         double im = 0;
 
                         // TODO julia sets?
-//			         	double re0 = 0.0315;
-//				        double im0 = -0.121;
+//			         	double re0 = -0.8;
+//				        double im0 = 0.156;
 //
 //				        double re = (reCenter - width / zoom / 2.0) + (rePixel / zoom);
 //                      double im = (imCenter - height / zoom / 2.0) + (imPixel / zoom);
