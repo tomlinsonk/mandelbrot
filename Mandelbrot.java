@@ -63,7 +63,7 @@ public class Mandelbrot extends Application {
 
         // Create toolbar
         toolbar.setPrefWidth(SCREEN_WIDTH / 8);
-        toolbar.setSpacing(SCREEN_HEIGHT / 10);
+        toolbar.setSpacing(SCREEN_HEIGHT / 15);
         toolbar.setAlignment(Pos.CENTER);
 
         // Create brush picker
@@ -114,7 +114,7 @@ public class Mandelbrot extends Application {
         zoomIndicator.textProperty().bind(Bindings.format("Zoom: %.2G", fractal.zoomProperty));
 
         // Add all items to toolbar
-        toolbar.getChildren().addAll(zoomIndicator, renderIndicator, brushPane, sliderPane, saveButton);
+        toolbar.getChildren().addAll(renderIndicator, zoomIndicator, brushPane, sliderPane, saveButton);
 
         // Create event handlers
         scene.setOnKeyPressed(event -> handleKeyPress(event.getCode()));
