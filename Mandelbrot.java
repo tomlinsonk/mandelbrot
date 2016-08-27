@@ -49,6 +49,7 @@ public class Mandelbrot extends Application {
 
         // Create the scene
         Scene scene = new Scene(pane, SCREEN_WIDTH, SCREEN_HEIGHT);
+        scene.getStylesheets().add(getClass().getResource("resources/stylesheet.css").toExternalForm());
 
         // Add the canvas to the scene
         pane.setCenter(imageView);
@@ -66,9 +67,13 @@ public class Mandelbrot extends Application {
         toolbar.setAlignment(Pos.CENTER);
 
         // Create brush picker
+        VBox brushPane  = new VBox();
+        brushPane.setAlignment(Pos.CENTER);
+        Label brushLabel = new Label("Brush");
         ComboBox<String> brushList = new ComboBox<>();
         brushList.getItems().addAll("Smooth", "Elegant", "Binary", "Tropical", "Banded");
         brushList.setValue("Smooth");
+        brushPane.getChildren().addAll(brushLabel, brushList);
 
         // Create progress indicator
         ProgressIndicator indicator = new ProgressIndicator(0);
@@ -93,6 +98,8 @@ public class Mandelbrot extends Application {
 
         // Create save button
         Button saveButton = new Button("Save Image");
+        Image saveIcon = new Image(getClass().getResourceAsStream("resources/save.png"), 20, 20, false, false);
+        saveButton.setGraphic(new ImageView(saveIcon));
         final FileChooser fileChooser = new FileChooser();
         saveButton.setOnAction(event -> {
             File file = fileChooser.showSaveDialog(stage);
@@ -102,7 +109,7 @@ public class Mandelbrot extends Application {
         // Create new fractal
         fractal = new Fractal(SCREEN_WIDTH * 7 / 8, SCREEN_HEIGHT, imageView, indicator);
 
-        toolbar.getChildren().addAll(indicator, brushList, sliderPane, saveButton);
+        toolbar.getChildren().addAll(indicator, brushPane, sliderPane, saveButton);
 
         // Create event handlers
         scene.setOnKeyPressed(event -> handleKeyPress(event.getCode()));
