@@ -1,3 +1,5 @@
+![](images/mandelbrot.png)
+
 # Mandelbrot
 
 Mandelbrot is a Java application that generates and displays the Mandelbrot Set,
