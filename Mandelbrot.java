@@ -74,7 +74,7 @@ public class Mandelbrot extends Application {
         brushPane.setAlignment(Pos.CENTER);
         Label brushLabel = new Label("Brush");
         ComboBox<String> brushList = new ComboBox<>();
-        brushList.getItems().addAll("Smooth", "Elegant", "Binary", "Tropical", "Banded");
+        brushList.getItems().addAll("Smooth", "Elegant", "Binary", "Banded");
         brushList.setValue("Smooth");
         brushPane.getChildren().addAll(brushLabel, brushList);
 
@@ -84,30 +84,37 @@ public class Mandelbrot extends Application {
         renderIndicator.setVisible(true);
 
         // Create iteration slider
-        VBox sliderPane = new VBox();
-        sliderPane.setAlignment(Pos.CENTER);
-        Slider slider = new Slider();
-        slider.setMin(0);
-        slider.setMax(2000);
-        slider.setMajorTickUnit(500);
-        slider.setMinorTickCount(5);
-        slider.setShowTickMarks(true);
-        slider.setShowTickLabels(true);
-        slider.setMaxWidth(SCREEN_WIDTH / 9);
-        slider.setValue(1000);
-        Label sliderLabel = new Label();
-        sliderLabel.textProperty().bind(Bindings.format("Max Iterations: %.0f", slider.valueProperty()));
-        sliderPane.getChildren().addAll(sliderLabel, slider);
+        VBox iterationPane = new VBox();
+        iterationPane.setAlignment(Pos.CENTER);
+        Slider iterationSlider = new Slider();
+        iterationSlider.setMin(0);
+        iterationSlider.setMax(2000);
+        iterationSlider.setMajorTickUnit(500);
+        iterationSlider.setMinorTickCount(5);
+        iterationSlider.setShowTickMarks(true);
+        iterationSlider.setShowTickLabels(true);
+        iterationSlider.setMaxWidth(SCREEN_WIDTH / 9);
+        iterationSlider.setValue(1000);
+        Label iterationLabel = new Label();
+        iterationLabel.textProperty().bind(Bindings.format("Max Iterations: %.0f", iterationSlider.valueProperty()));
+        iterationPane.getChildren().addAll(iterationLabel, iterationSlider);
+
+        // Create iteration slider
+        VBox colorPane = new VBox();
+        colorPane.setAlignment(Pos.CENTER);
+        Slider colorSlider = new Slider();
+        colorSlider.setMin(0);
+        colorSlider.setMax(1);
+        colorSlider.setMaxWidth(SCREEN_WIDTH / 9);
+        colorSlider.setValue(0);
+        Label colorLabel = new Label("Color");
+        colorPane.getChildren().addAll(colorLabel, colorSlider);
 
         // Create save button
         Button saveButton = new Button("Save Image");
         Image saveIcon = new Image(getClass().getResourceAsStream("resources/save.png"), 20, 20, false, false);
         saveButton.setGraphic(new ImageView(saveIcon));
-        final FileChooser fileChooser = new FileChooser();
-        saveButton.setOnAction(event -> {
-            File file = fileChooser.showSaveDialog(stage);
-            if (file != null) saveToFile(imageView.getImage(), file);
-        });
+        FileChooser fileChooser = new FileChooser();
 
         // Create new fractal
         fractal = new Fractal(SCREEN_WIDTH * 7 / 8, SCREEN_HEIGHT, imageView, renderIndicator);
@@ -117,12 +124,17 @@ public class Mandelbrot extends Application {
         zoomIndicator.textProperty().bind(Bindings.format("Zoom: %.2G", fractal.zoomProperty));
 
         // Add all items to toolbar
-        toolbar.getChildren().addAll(instructions, renderIndicator, zoomIndicator, brushPane, sliderPane, saveButton);
+        toolbar.getChildren().addAll(instructions, renderIndicator, zoomIndicator, brushPane, colorPane, iterationPane, saveButton);
 
         // Create event handlers
         scene.setOnKeyPressed(event -> handleKeyPress(event.getCode()));
         brushList.valueProperty().addListener((observable, oldValue, newValue) -> updateBrush(newValue));
-        slider.setOnMouseReleased(event -> fractal.setMaxIterations((int)slider.getValue()));
+        iterationSlider.setOnMouseReleased(event -> fractal.setMaxIterations((int)iterationSlider.getValue()));
+        colorSlider.setOnMouseReleased(event -> fractal.setColorOffset(colorSlider.getValue()));
+        saveButton.setOnAction(event -> {
+            File file = fileChooser.showSaveDialog(stage);
+            if (file != null) saveToFile(imageView.getImage(), file);
+        });
     }
 
     /**
@@ -189,9 +201,6 @@ public class Mandelbrot extends Application {
                 break;
             case "Banded":
                 fractal.setBrush(new BandedBrush(fractal.maxIterations));
-                break;
-            case "Tropical":
-                fractal.setBrush(new TropicalBrush(fractal.maxIterations));
                 break;
             case "Smooth":
                 fractal.setBrush(new SmoothBrush(fractal.maxIterations));

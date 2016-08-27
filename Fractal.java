@@ -22,10 +22,11 @@ public class Fractal {
     double reCenter, imCenter;
     double zoom;
 
-    // This property is used for displaying the zoom level
+    // Properties for UI input/display binding
     DoubleProperty zoomProperty;
 
     int maxIterations;
+    double colorOffset;
     boolean rendering;
     Image image;
     Brush brush;
@@ -53,6 +54,7 @@ public class Fractal {
         // Default values
         zoom = 400;
         zoomProperty = new SimpleDoubleProperty(1);
+        colorOffset = 0;
         rendering = false;
         reCenter = -0.75;
         imCenter = 0;
@@ -82,6 +84,16 @@ public class Fractal {
     public void setBrush(Brush brush) {
         if (rendering) return;
         this.brush = brush;
+        generate();
+    }
+
+    /**
+     * Set the color offset used by the brush
+     * @param colorOffset
+     */
+    public void setColorOffset(double colorOffset) {
+        if (rendering) return;
+        this.colorOffset = colorOffset;
         generate();
     }
 
@@ -189,8 +201,10 @@ public class Fractal {
                             iteration++;
                         }
 
+                        double escapeMagnitude = Math.sqrt(reSqr + imSqr);
+
                         // Use the brush to pick a color
-                        pixels.setColor(rePixel, imPixel, brush.getColor(iteration, Math.sqrt(reSqr + imSqr)));
+                        pixels.setColor(rePixel, imPixel, brush.getColor(iteration, escapeMagnitude, colorOffset));
                     }
 
                     // Update the progress of this task

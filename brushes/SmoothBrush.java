@@ -13,7 +13,7 @@ public class SmoothBrush extends Brush {
     }
 
     @Override
-    public Color getColor(int iteration, double escapeMagnitude) {
+    public Color getColor(int iteration, double escapeMagnitude, double offset) {
 
         if (iteration == maxIterations) {
             return Color.BLACK;
@@ -22,6 +22,6 @@ public class SmoothBrush extends Brush {
         double smooth = iteration + 1 - Math.log(Math.log(escapeMagnitude)) / Math.log(2);
 
 
-        return Color.hsb(10f * smooth, 0.6f, 1.0f);
+        return Color.hsb((offset * 360) + smooth, 0.6f, 1.0f);
     }
 }
