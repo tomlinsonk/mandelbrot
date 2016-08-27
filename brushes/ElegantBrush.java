@@ -13,16 +13,13 @@ public class ElegantBrush extends Brush {
     }
 
     @Override
-    public Color getColor(int iteration,  double escapeMagnitude) {
+    public Color getColor(int iteration,  double escapeMagnitude, double offset) {
         if (iteration == maxIterations) {
             return Color.BLACK;
         }
 
-        int lum = iteration % 255;
-        if ((iteration / 255) % 2 != 0) {
-            lum = 255 - (iteration % 255);
-        }
+        double brightness = 0.5 + 0.5 * Math.cos((iteration + offset * maxIterations / 10) * Math.PI / (double)maxIterations * 10f);
 
-        return Color.rgb(lum, lum, lum);
+        return Color.hsb(0, 0, brightness);
     }
 }

@@ -24,11 +24,11 @@ public class BandedBrush extends Brush {
     }
 
     @Override
-    public Color getColor(int iteration, double escapeMagnitude) {
+    public Color getColor(int iteration, double escapeMagnitude, double offset) {
         if (iteration == maxIterations) {
             return Color.BLACK;
         }
 
-        return randomColors[iteration];
+        return randomColors[(iteration + (int)(maxIterations * offset)) % maxIterations];
     }
 }
