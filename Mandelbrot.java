@@ -63,7 +63,7 @@ public class Mandelbrot extends Application {
 
         // Create toolbar
         toolbar.setPrefWidth(SCREEN_WIDTH / 8);
-        toolbar.setSpacing(SCREEN_HEIGHT / 15);
+        toolbar.setSpacing(SCREEN_HEIGHT / 20);
         toolbar.setAlignment(Pos.CENTER);
 
         // Create instructions label
@@ -119,22 +119,40 @@ public class Mandelbrot extends Application {
         // Create new fractal
         fractal = new Fractal(SCREEN_WIDTH * 7 / 8, SCREEN_HEIGHT, imageView, renderIndicator);
 
-        // Create zoom indicator
-        Label zoomIndicator = new Label();
-        zoomIndicator.textProperty().bind(Bindings.format("Zoom: %.2G", fractal.zoomProperty));
+        // Create info panel
+        VBox infoPane = new VBox();
+        infoPane.setAlignment(Pos.CENTER);
+        Label zoomReadout = new Label();
+        zoomReadout.textProperty().bind(Bindings.format("Zoom: %.2G", fractal.zoomProperty));
+        Label coordReadout = new Label();
+        infoPane.getChildren().addAll(zoomReadout, coordReadout);
 
         // Add all items to toolbar
-        toolbar.getChildren().addAll(instructions, renderIndicator, zoomIndicator, brushPane, colorPane, iterationPane, saveButton);
+        toolbar.getChildren().addAll(instructions, renderIndicator, infoPane, brushPane, colorPane, iterationPane, saveButton);
 
         // Create event handlers
         scene.setOnKeyPressed(event -> handleKeyPress(event.getCode()));
         brushList.valueProperty().addListener((observable, oldValue, newValue) -> updateBrush(newValue));
         iterationSlider.setOnMouseReleased(event -> fractal.setMaxIterations((int)iterationSlider.getValue()));
         colorSlider.setOnMouseReleased(event -> fractal.setColorOffset(colorSlider.getValue()));
+        imageView.setOnMouseMoved(event -> coordReadout.setText(getCoordinateString((int)event.getX(), (int)event.getY())));
         saveButton.setOnAction(event -> {
             File file = fileChooser.showSaveDialog(stage);
             if (file != null) saveToFile(imageView.getImage(), file);
         });
+    }
+
+    /**
+     * Turns an x, y coordinate on the imageview into a coordinate string that shows the complex point at those coordinates
+     * @param x
+     * @param y
+     * @return
+     */
+    private String getCoordinateString(int x, int y) {
+        double re = fractal.getRealComponent(x);
+        double im = fractal.getImaginaryComponent(y);
+
+        return "Mouse: " + String.format("%.3f", re) + (im >= 0 ? " + " : " - ") + String.format("%.3f", Math.abs(im)) + "i";
     }
 
     /**
@@ -181,7 +199,6 @@ public class Mandelbrot extends Application {
             default:
                 return;
         }
-
 
     }
 
