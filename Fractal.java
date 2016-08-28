@@ -161,11 +161,11 @@ public class Fractal {
                 PixelWriter pixels = newImage.getPixelWriter();
 
                 // Iterate over every pixel on the screen, figure out if it's in the set, and color it
-                for (int rePixel = 0; rePixel < width; rePixel++) {
-                    for (int imPixel = 0; imPixel < height; imPixel++) {
+                for (int xPixel = 0; xPixel < width; xPixel++) {
+                    for (int yPixel = 0; yPixel < height; yPixel++) {
 
-                        double re0 = (reCenter - width / zoom / 2.0) + (rePixel / zoom);
-                        double im0 = (imCenter - height / zoom / 2.0) + (imPixel / zoom);
+                        double re0 = getRealComponent(xPixel);
+                        double im0 = getImaginaryComponent(yPixel);
 
                         double re = 0;
                         double im = 0;
@@ -174,8 +174,8 @@ public class Fractal {
 //			         	double re0 = -0.8;
 //				        double im0 = 0.156;
 //
-//				        double re = (reCenter - width / zoom / 2.0) + (rePixel / zoom);
-//                      double im = (imCenter - height / zoom / 2.0) + (imPixel / zoom);
+//				        double re = getRealComponent(xPixel);
+//                      double im = getImaginaryComponent(yPixel);
 
                         double reSqr = re * re;
                         double imSqr = im * im;
@@ -204,11 +204,11 @@ public class Fractal {
                         double escapeMagnitude = Math.sqrt(reSqr + imSqr);
 
                         // Use the brush to pick a color
-                        pixels.setColor(rePixel, imPixel, brush.getColor(iteration, escapeMagnitude, colorOffset));
+                        pixels.setColor(xPixel, yPixel, brush.getColor(iteration, escapeMagnitude, colorOffset));
                     }
 
                     // Update the progress of this task
-                    updateProgress(rePixel, width);
+                    updateProgress(xPixel, width);
                 }
 
                 // Send the new image to the view
@@ -226,5 +226,25 @@ public class Fractal {
         // Bind the indicator to the task and start it
         indicator.progressProperty().bind(generateFractal.progressProperty());
         new Thread(generateFractal).start();
+    }
+
+    /**
+     * Converts an x coordinate on the image into the real component of that point
+     * @param xPixel
+     * @return
+     */
+    public double getRealComponent(int xPixel) {
+        return (reCenter - width / zoom / 2.0) + (xPixel / zoom);
+    }
+
+    /**
+     * Converts a y coordinate on the image into the imaginary component of that point.
+     * Note that the signs are swapped from above because y values get bigger lower on the screen.
+     * This is not important for the set (it is symmetrical about the real axis), but it makes more sense for displaying coordinates
+     * @param yPixel
+     * @return
+     */
+    public double getImaginaryComponent(int yPixel) {
+        return (height / zoom / 2.0 - imCenter) - (yPixel / zoom);
     }
 }
