@@ -87,6 +87,7 @@ public class Mandelbrot extends Application {
         VBox iterationPane = new VBox();
         iterationPane.setAlignment(Pos.CENTER);
         Slider iterationSlider = new Slider();
+        iterationSlider.setBlockIncrement(0);
         iterationSlider.setMin(0);
         iterationSlider.setMax(2000);
         iterationSlider.setMajorTickUnit(500);
@@ -103,6 +104,7 @@ public class Mandelbrot extends Application {
         VBox colorPane = new VBox();
         colorPane.setAlignment(Pos.CENTER);
         Slider colorSlider = new Slider();
+        colorSlider.setBlockIncrement(0);
         colorSlider.setMin(0);
         colorSlider.setMax(1);
         colorSlider.setMaxWidth(SCREEN_WIDTH / 9);
