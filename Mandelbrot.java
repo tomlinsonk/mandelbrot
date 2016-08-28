@@ -21,10 +21,11 @@ import java.io.File;
 import java.io.IOException;
 
 /**
+ * Mandelbrot v1.1
+ *
  * Created by Kiran Tomlinson on 8/24/16.
  *
- * This is the main class of the application. Acts as the view in MVC
- * and draws the set.
+ * This is the main class of the application.
  */
 public class Mandelbrot extends Application {
 
