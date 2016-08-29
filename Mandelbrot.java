@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.beans.binding.Bindings;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -12,6 +13,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import mandelbrot.brushes.*;
 
@@ -29,9 +31,8 @@ import java.io.IOException;
  */
 public class Mandelbrot extends Application {
 
-    // TODO: Smart screen size
-    final int SCREEN_WIDTH = 1920;
-    final int SCREEN_HEIGHT = 1105;
+    static int SCREEN_WIDTH;
+    static int SCREEN_HEIGHT;
 
     Fractal fractal;
 
@@ -42,6 +43,11 @@ public class Mandelbrot extends Application {
      */
     @Override
     public void start(Stage stage) throws Exception {
+
+        // Get screen dimensions, and set window size appropriately
+        Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+        SCREEN_WIDTH = (int)screenBounds.getWidth();
+        SCREEN_HEIGHT = (int)screenBounds.getHeight();
 
         // Create all JavaFX objects
         BorderPane pane = new BorderPane();
