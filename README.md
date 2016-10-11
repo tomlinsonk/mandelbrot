@@ -9,6 +9,9 @@ Mandelbrot can navigate the fractal, and zoom in down to floating point precisio
 A selection of customizable brushes is available to view the fractal in 
 different ways.
 
+Mandelbrot also supports Julia Set generation based on a seed selected by clicking
+on the Mandelbrot Set.
+
 ## Usage
 
 The application is driven by a JavaFX GUI. Simply run the main method in 
