@@ -21,6 +21,7 @@ public class Fractal {
     double width, height;
     double reCenter, imCenter;
     double zoom;
+    double juliaReSeed, juliaImSeed;
 
     // Properties for UI input/display binding
     DoubleProperty zoomProperty;
@@ -28,6 +29,7 @@ public class Fractal {
     int maxIterations;
     double colorOffset;
     boolean rendering;
+    boolean isJulia;
     Image image;
     Brush brush;
 
@@ -35,11 +37,11 @@ public class Fractal {
     ProgressIndicator indicator;
 
 
-
     /**
      * Constructor
-     * @param width the width in pixels of the fractal
-     * @param height the height in pixels of the fractal
+     *
+     * @param width     the width in pixels of the fractal
+     * @param height    the height in pixels of the fractal
      * @param imageView the view this fractal is displayed in
      * @param indicator the progress indicator
      */
@@ -61,6 +63,10 @@ public class Fractal {
         maxIterations = 1000;
         brush = new SmoothBrush(maxIterations);
 
+        isJulia = false;
+        juliaImSeed = 0;
+        juliaReSeed = 0;
+
         // Create fractal
         generate();
     }
@@ -68,6 +74,7 @@ public class Fractal {
 
     /**
      * Set the max iterations of the fractal and the brush
+     *
      * @param maxIterations
      */
     public void setMaxIterations(int maxIterations) {
@@ -79,6 +86,7 @@ public class Fractal {
 
     /**
      * Change the brush being used to paint the fractal
+     *
      * @param brush
      */
     public void setBrush(Brush brush) {
@@ -89,6 +97,7 @@ public class Fractal {
 
     /**
      * Set the color offset used by the brush
+     *
      * @param colorOffset
      */
     public void setColorOffset(double colorOffset) {
@@ -104,25 +113,25 @@ public class Fractal {
 
     public void moveRight() {
         if (rendering) return;
-        reCenter +=  width / zoom / 10.0;
+        reCenter += width / zoom / 10.0;
         generate();
     }
 
     public void moveLeft() {
         if (rendering) return;
-        reCenter -=  width / zoom / 10.0;
+        reCenter -= width / zoom / 10.0;
         generate();
     }
 
     public void moveUp() {
         if (rendering) return;
-        imCenter -=  height / zoom / 10.0;
+        imCenter -= height / zoom / 10.0;
         generate();
     }
 
     public void moveDown() {
         if (rendering) return;
-        imCenter +=  height / zoom / 10.0;
+        imCenter += height / zoom / 10.0;
         generate();
     }
 
@@ -141,7 +150,6 @@ public class Fractal {
     }
 
 
-
     /**
      * Method to generate the fractal based on current state.
      * Uses a task so it runs in the background and sends progress to the indicator.
@@ -157,25 +165,26 @@ public class Fractal {
                 Platform.runLater(() -> rendering = true);
 
                 // Create image
-                WritableImage newImage = new WritableImage((int)width, (int)height);
+                WritableImage newImage = new WritableImage((int) width, (int) height);
                 PixelWriter pixels = newImage.getPixelWriter();
 
                 // Iterate over every pixel on the screen, figure out if it's in the set, and color it
                 for (int xPixel = 0; xPixel < width; xPixel++) {
                     for (int yPixel = 0; yPixel < height; yPixel++) {
 
-                        double re0 = getRealComponent(xPixel);
-                        double im0 = getImaginaryComponent(yPixel);
+                        double re0, im0, re, im;
 
-                        double re = 0;
-                        double im = 0;
-
-                        // TODO julia sets?
-//			         	double re0 = -0.8;
-//				        double im0 = 0.156;
-//
-//				        double re = getRealComponent(xPixel);
-//                      double im = getImaginaryComponent(yPixel);
+                        if (isJulia) {
+                            re0 = juliaReSeed;
+                            im0 = juliaImSeed;
+                            re = getRealComponent(xPixel);
+                            im = getImaginaryComponent(yPixel);
+                        } else {
+                            re0 = getRealComponent(xPixel);
+                            im0 = getImaginaryComponent(yPixel);
+                            re = 0;
+                            im = 0;
+                        }
 
                         double reSqr = re * re;
                         double imSqr = im * im;
@@ -230,6 +239,7 @@ public class Fractal {
 
     /**
      * Converts an x coordinate on the image into the real component of that point
+     *
      * @param xPixel
      * @return
      */
@@ -241,10 +251,44 @@ public class Fractal {
      * Converts a y coordinate on the image into the imaginary component of that point.
      * Note that the signs are swapped from above because y values get bigger lower on the screen.
      * This is not important for the set (it is symmetrical about the real axis), but it makes more sense for displaying coordinates
+     *
      * @param yPixel
      * @return
      */
     public double getImaginaryComponent(int yPixel) {
         return (height / zoom / 2.0 - imCenter) - (yPixel / zoom);
+    }
+
+
+    /**
+     * Turn julia set generation on and reset view parameters.
+     * @param xPixel
+     * @param yPixel
+     * @return A string of the re, im seed of this julia set
+     */
+    public String enableJulia(int xPixel, int yPixel) {
+        this.juliaReSeed = getRealComponent(xPixel);
+        this.juliaImSeed = getImaginaryComponent(yPixel);
+        this.isJulia = true;
+        zoom = 400;
+        zoomProperty.setValue(1);
+        reCenter = 0;
+        imCenter = 0;
+
+        generate();
+
+        return "Seed: " + String.format("%.3f", juliaReSeed) + (juliaImSeed >= 0 ? " + " : " - ") + String.format("%.3f", Math.abs(juliaImSeed)) + "i";
+    }
+
+    /**
+     * Return to the mandelbrot set
+     */
+    public void disableJulia() {
+        this.isJulia = false;
+        zoom = 400;
+        zoomProperty.setValue(1);
+        reCenter = -0.75;
+        imCenter = 0;
+        generate();
     }
 }

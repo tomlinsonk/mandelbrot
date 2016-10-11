@@ -134,10 +134,15 @@ public class Mandelbrot extends Application {
         Label zoomReadout = new Label();
         zoomReadout.textProperty().bind(Bindings.format("Zoom: %.2G", fractal.zoomProperty));
         Label coordReadout = new Label();
-        infoPane.getChildren().addAll(zoomReadout, coordReadout);
+        Label seedReadout = new Label();
+        seedReadout.setVisible(false);
+        infoPane.getChildren().addAll(zoomReadout, coordReadout, seedReadout);
+
+        // Create Julia button
+        Button juliaButton = new Button("Generate Julia Set");
 
         // Add all items to toolbar
-        toolbar.getChildren().addAll(instructions, renderIndicator, infoPane, brushPane, colorPane, iterationPane, saveButton);
+        toolbar.getChildren().addAll(instructions, renderIndicator, infoPane, juliaButton, brushPane, colorPane, iterationPane, saveButton);
 
         // Create event handlers
         scene.setOnKeyPressed(event -> handleKeyPress(event.getCode()));
@@ -148,6 +153,21 @@ public class Mandelbrot extends Application {
         saveButton.setOnAction(event -> {
             File file = fileChooser.showSaveDialog(stage);
             if (file != null) saveToFile(imageView.getImage(), file);
+        });
+        juliaButton.setOnAction(event -> {
+            if (fractal.isJulia) {
+                juliaButton.setText("Generate Julia Set");
+                fractal.disableJulia();
+                seedReadout.setVisible(false);
+            } else {
+                juliaButton.setText("Click to pick a seed...");
+                imageView.setOnMouseClicked(click -> {
+                    juliaButton.setText("Back to Mandelbrot");
+                    imageView.setOnMouseClicked(nextClick -> {});
+                    seedReadout.setText(fractal.enableJulia((int)click.getX(), (int)click.getY()));
+                    seedReadout.setVisible(true);
+                });
+            }
         });
     }
 
@@ -235,7 +255,6 @@ public class Mandelbrot extends Application {
                 return;
         }
     }
-
 
     /**
      * Main method. This is the entry point of the application.
