@@ -11,6 +11,8 @@ import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import mandelbrot.brushes.SmoothBrush;
 
+import java.util.Stack;
+
 /**
  * Created by Kiran Tomlinson on 8/25/16.
  *
@@ -36,6 +38,9 @@ public class Fractal {
     ImageView imageView;
     ProgressIndicator indicator;
 
+    Stack<FractalState> mandelbrotHistory;
+    Stack<FractalState> juliaHistory;
+
 
     /**
      * Constructor
@@ -45,7 +50,10 @@ public class Fractal {
      * @param imageView the view this fractal is displayed in
      * @param indicator the progress indicator
      */
-    public Fractal(int width, int height, ImageView imageView, ProgressIndicator indicator) {
+    public Fractal(double width, double height, ImageView imageView, ProgressIndicator indicator) {
+
+        mandelbrotHistory = new Stack<>();
+        juliaHistory = new Stack<>();
 
         this.width = width;
         this.height = height;
@@ -135,17 +143,42 @@ public class Fractal {
         generate();
     }
 
-    public void zoomIn() {
+    public void backToLastState() {
         if (rendering) return;
-        zoom *= 2;
-        zoomProperty.set(zoomProperty.get() * 2);
+
+        if (isJulia) {
+            if (juliaHistory.empty()) return;
+            setValuesToState(juliaHistory.pop());
+        } else {
+            if (mandelbrotHistory.empty()) return;
+            setValuesToState(mandelbrotHistory.pop());
+        }
+
         generate();
     }
 
-    public void zoomOut() {
+    /**
+     * Zoom in based on the position of the zoom rectangle
+     * @param xPixel top left x coordinate on the image
+     * @param yPixel top left y coordinate on the image
+     * @param pixelWidth width of the zoom rectangle
+     * @param pixelHeight height of the zoom rectangle
+     */
+    public void zoomIn(double xPixel, double yPixel, double pixelWidth, double pixelHeight) {
         if (rendering) return;
-        zoom /= 2;
-        zoomProperty.set(zoomProperty.get() / 2);
+
+        if (isJulia) {
+            juliaHistory.push(new FractalState(this));
+        } else {
+            mandelbrotHistory.push(new FractalState(this));
+        }
+
+        // Find the new center and zoom level
+        reCenter = getRealComponent(xPixel + pixelWidth / 2);
+        imCenter = - getImaginaryComponent(yPixel + pixelHeight / 2);
+        zoom *= width / pixelWidth;
+        zoomProperty.set(zoomProperty.get() * width / pixelWidth);
+
         generate();
     }
 
@@ -243,7 +276,7 @@ public class Fractal {
      * @param xPixel
      * @return
      */
-    public double getRealComponent(int xPixel) {
+    public double getRealComponent(double xPixel) {
         return (reCenter - width / zoom / 2.0) + (xPixel / zoom);
     }
 
@@ -255,7 +288,7 @@ public class Fractal {
      * @param yPixel
      * @return
      */
-    public double getImaginaryComponent(int yPixel) {
+    public double getImaginaryComponent(double yPixel) {
         return (height / zoom / 2.0 - imCenter) - (yPixel / zoom);
     }
 
@@ -266,7 +299,10 @@ public class Fractal {
      * @param yPixel
      * @return A string of the re, im seed of this julia set
      */
-    public String enableJulia(int xPixel, int yPixel) {
+    public String enableJulia(double xPixel, double yPixel) {
+        // Save the current state
+        mandelbrotHistory.push(new FractalState(this));
+
         this.juliaReSeed = getRealComponent(xPixel);
         this.juliaImSeed = getImaginaryComponent(yPixel);
         this.isJulia = true;
@@ -281,14 +317,25 @@ public class Fractal {
     }
 
     /**
-     * Return to the mandelbrot set
+     * Return to the mandelbrot set where we left off
      */
     public void disableJulia() {
         this.isJulia = false;
-        zoom = 400;
-        zoomProperty.setValue(1);
-        reCenter = -0.75;
-        imCenter = 0;
+        setValuesToState(mandelbrotHistory.pop());
+        juliaHistory = new Stack<>();
         generate();
     }
+
+
+    /**
+     * Set this fractal's values to those stored in a FractalState
+     * @param state
+     */
+    private void setValuesToState(FractalState state) {
+        zoom = state.zoom;
+        reCenter = state.reCenter;
+        imCenter = state.imCenter;
+        zoomProperty.setValue(state.readableZoom);
+    }
+
 }
