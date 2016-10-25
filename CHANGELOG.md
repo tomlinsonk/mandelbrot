@@ -1,6 +1,18 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## Unversioned
+### Added
+- Selection rectangle to zoom in
+- Zoom history (separate for mandelbrot and julia sets)
+- Ability to go back in zoom history (backspace)
+
+### Changed
+- Updated instructions text
+
+### Removed
+- +/- to zoom
+
 ## 1.2 - 2016-10-11
 ### Added
 - Juilia set rendering
