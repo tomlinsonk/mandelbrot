@@ -83,12 +83,12 @@ public class Mandelbrot extends Application {
         stage.show();
 
         // Create toolbar
-        toolbar.setMinWidth(SCREEN_WIDTH / 8);
+        toolbar.setPrefWidth(SCREEN_WIDTH / 8);
         toolbar.setSpacing(SCREEN_HEIGHT / 20);
         toolbar.setAlignment(Pos.CENTER);
 
         // Create instructions label
-        Label instructions = new Label("WASD to move\ndrag mouse to zoom\nbackspace to go back");
+        Label instructions = new Label("WASD to move\ndrag mouse to zoom\nescape to cancel zoom\nbackspace to go back");
 
         // Create brush picker
         VBox brushPane  = new VBox();
@@ -151,7 +151,6 @@ public class Mandelbrot extends Application {
         Label seedReadout = new Label();
         seedReadout.setVisible(false);
         infoPane.getChildren().addAll(zoomReadout, coordReadout, seedReadout);
-        infoPane.toBack();
 
         // Create Julia button
         Button juliaButton = new Button("Generate Julia Set");
