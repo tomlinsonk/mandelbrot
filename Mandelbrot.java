@@ -37,7 +37,7 @@ public class Mandelbrot extends Application {
     // Constants
     final String[] BRUSH_LIST = {"Smooth", "Elegant", "Banded", "Binary"};
     final String DEFAULT_BRUSH = "Smooth";
-    final String INSTRUCTIONS = "WASD to move\ndrag mouse to zoom\nescape to cancel zoom\nbackspace to go back";
+    final String INSTRUCTIONS = "WASD to move\ndrag mouse to zoom\nescape to cancel zoom\n+/- also zooms\nbackspace to go back";
 
 
     double SCREEN_WIDTH;
@@ -257,6 +257,12 @@ public class Mandelbrot extends Application {
                 break;
             case W:
                 fractal.moveUp();
+                break;
+            case MINUS:
+                fractal.zoomOutFixed();
+                break;
+            case EQUALS:
+                fractal.zoomInFixed();
                 break;
             case BACK_SPACE:
                 fractal.backToLastState();

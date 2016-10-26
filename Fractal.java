@@ -174,6 +174,34 @@ public class Fractal {
         generate();
     }
 
+    public void zoomInFixed() {
+        if (rendering) return;
+
+        if (isJulia) {
+            juliaHistory.push(new FractalState(this));
+        } else {
+            mandelbrotHistory.push(new FractalState(this));
+        }
+
+        zoom *= 2;
+        zoomProperty.set(zoomProperty.get() * 2);
+        generate();
+    }
+
+    public void zoomOutFixed() {
+        if (rendering) return;
+
+        if (isJulia) {
+            juliaHistory.push(new FractalState(this));
+        } else {
+            mandelbrotHistory.push(new FractalState(this));
+        }
+
+        zoom /= 2;
+        zoomProperty.set(zoomProperty.get() / 2);
+        generate();
+    }
+
     public void backToLastState() {
         if (rendering) return;
 
