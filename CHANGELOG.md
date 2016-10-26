@@ -6,12 +6,11 @@ All notable changes to this project will be documented in this file.
 - Selection rectangle to zoom in
 - Zoom history (separate for mandelbrot and julia sets)
 - Ability to go back in zoom history (backspace)
+- Image caching for fast back
 
 ### Changed
 - Updated instructions text
-
-### Removed
-- +/- to zoom
+- General code cleanup
 
 ## 1.2 - 2016-10-11
 ### Added
