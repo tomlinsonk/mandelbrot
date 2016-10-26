@@ -34,6 +34,12 @@ import java.io.IOException;
  */
 public class Mandelbrot extends Application {
 
+    // Constants
+    final String[] BRUSH_LIST = {"Smooth", "Elegant", "Banded", "Binary"};
+    final String DEFAULT_BRUSH = "Smooth";
+    final String INSTRUCTIONS = "WASD to move\ndrag mouse to zoom\nescape to cancel zoom\nbackspace to go back";
+
+
     double SCREEN_WIDTH;
     double SCREEN_HEIGHT;
 
@@ -44,6 +50,8 @@ public class Mandelbrot extends Application {
 
     boolean pickingJuliaPoint;
     boolean selectingZoom;
+
+
 
     /**
      * Method to start the application. Opens a window and creates all view objects
@@ -82,27 +90,32 @@ public class Mandelbrot extends Application {
         stage.setResizable(false);
         stage.show();
 
+        // Create new fractal
+        fractal = new Fractal(SCREEN_WIDTH * 7 / 8, SCREEN_HEIGHT);
+        imageView.imageProperty().bind(fractal.imageProperty);
+
         // Create toolbar
         toolbar.setPrefWidth(SCREEN_WIDTH / 8);
         toolbar.setSpacing(SCREEN_HEIGHT / 20);
         toolbar.setAlignment(Pos.CENTER);
 
         // Create instructions label
-        Label instructions = new Label("WASD to move\ndrag mouse to zoom\nescape to cancel zoom\nbackspace to go back");
+        Label instructions = new Label(INSTRUCTIONS);
 
         // Create brush picker
         VBox brushPane  = new VBox();
         brushPane.setAlignment(Pos.CENTER);
         Label brushLabel = new Label("Brush");
-        ComboBox<String> brushList = new ComboBox<>();
-        brushList.getItems().addAll("Smooth", "Elegant", "Binary", "Banded");
-        brushList.setValue("Smooth");
-        brushPane.getChildren().addAll(brushLabel, brushList);
+        ComboBox<String> brushPicker = new ComboBox<>();
+        brushPicker.getItems().addAll(BRUSH_LIST);
+        brushPicker.setValue(DEFAULT_BRUSH);
+        brushPane.getChildren().addAll(brushLabel, brushPicker);
 
         // Create progress indicator
         ProgressIndicator renderIndicator = new ProgressIndicator(0);
         renderIndicator.setPrefSize(SCREEN_WIDTH / 10, SCREEN_HEIGHT / 10);
         renderIndicator.setVisible(true);
+        renderIndicator.progressProperty().bind(fractal.renderProgressProperty);
 
         // Create iteration slider
         VBox iterationPane = new VBox();
@@ -139,9 +152,6 @@ public class Mandelbrot extends Application {
         saveButton.setGraphic(new ImageView(saveIcon));
         FileChooser fileChooser = new FileChooser();
 
-        // Create new fractal
-        fractal = new Fractal(SCREEN_WIDTH * 7 / 8, SCREEN_HEIGHT, imageView, renderIndicator);
-
         // Create info panel
         VBox infoPane = new VBox();
         infoPane.setAlignment(Pos.CENTER);
@@ -168,10 +178,13 @@ public class Mandelbrot extends Application {
 
         // Create event handlers
         scene.setOnKeyPressed(event -> handleKeyPress(event.getCode()));
-        brushList.valueProperty().addListener((observable, oldValue, newValue) -> updateBrush(newValue));
+        brushPicker.valueProperty().addListener((observable, oldValue, newValue) -> updateBrush(newValue));
         iterationSlider.setOnMouseReleased(event -> fractal.setMaxIterations((int)iterationSlider.getValue()));
         colorSlider.setOnMouseReleased(event -> fractal.setColorOffset(colorSlider.getValue()));
         imageView.setOnMouseMoved(event -> coordReadout.setText(getMouseCoordinateString(event.getX(), event.getY())));
+        fractalPane.setOnMousePressed(event -> createNewZoomRect(event.getX(), event.getY()));
+        fractalPane.setOnMouseDragged(event -> resizeZoomRect(fractalPane, event.getX(), event.getY()));
+        fractalPane.setOnMouseReleased(event -> zoomFromRect());
 
         saveButton.setOnAction(event -> {
             File file = fileChooser.showSaveDialog(stage);
@@ -195,10 +208,6 @@ public class Mandelbrot extends Application {
                 });
             }
         });
-
-        fractalPane.setOnMousePressed(event -> createNewZoomRect(event.getX(), event.getY()));
-        fractalPane.setOnMouseDragged(event -> { if (fractalPane.isHover()) resizeZoomRect(event.getX(), event.getY()); });
-        fractalPane.setOnMouseReleased(event -> zoomFromRect());
     }
 
     /**
@@ -267,7 +276,6 @@ public class Mandelbrot extends Application {
      * @param brushName the name of the new brush
      */
     private void updateBrush(String brushName) {
-
         switch (brushName) {
             case "Binary":
                 fractal.setBrush(new BinaryBrush(fractal.maxIterations));
@@ -292,48 +300,50 @@ public class Mandelbrot extends Application {
      * @param clickY
      */
     private void createNewZoomRect(double clickX, double clickY) {
-        if (pickingJuliaPoint) return;
-        zoomRect.setX(clickX);
-        zoomRect.setY(clickY);
-        zoomRectStartX = clickX;
-        zoomRectStartY = clickY;
-        zoomRect.setVisible(true);
-        selectingZoom = true;
+        if (!pickingJuliaPoint) {
+            zoomRect.setX(clickX);
+            zoomRect.setY(clickY);
+            zoomRectStartX = clickX;
+            zoomRectStartY = clickY;
+
+            zoomRect.setVisible(true);
+            selectingZoom = true;
+        }
     }
 
     /**
      * Resize the current zoom rectangle based on new mouse coordinates
-     * @param newX
-     * @param newY
+     * @param newX new x coord of mouse
+     * @param newY new y coord of mouse
      */
-    private void resizeZoomRect(double newX, double newY) {
-        if (!selectingZoom) return;
+    private void resizeZoomRect(AnchorPane fractalPane, double newX, double newY) {
+        if (selectingZoom && fractalPane.isHover()) {
+            double desiredWidth = newX - zoomRectStartX;
+            double desiredHeight = newY - zoomRectStartY;
+            double fractalRatio = fractal.width / fractal.height;
+            double aspectRatio = Math.abs(desiredWidth / desiredHeight);
 
-        double desiredWidth = newX - zoomRectStartX;
-        double desiredHeight = newY - zoomRectStartY;
-        double fractalRatio = fractal.width / fractal.height;
-        double aspectRatio = Math.abs(desiredWidth / desiredHeight);
+            // Do we need to negate width or height?
+            int widthSign = desiredWidth < 0 ? -1 : 1;
+            int heightSign = desiredHeight < 0 ? -1 : 1;
 
-        // Do we need to negate width or height?
-        int widthSign = desiredWidth < 0 ? -1 : 1;
-        int heightSign = desiredHeight < 0 ? -1 : 1;
+            // Resize rectangle with aspect ratio constraint
+            if (aspectRatio <= fractalRatio) {
+                zoomRect.setWidth(widthSign * desiredWidth);
+                zoomRect.setHeight(widthSign * desiredWidth / fractalRatio);
+            } else {
+                zoomRect.setWidth(heightSign * desiredHeight * fractalRatio);
+                zoomRect.setHeight(heightSign * desiredHeight);
+            }
 
-        // Resize rectangle with aspect ratio constraint
-        if (aspectRatio <= fractalRatio) {
-            zoomRect.setWidth(widthSign * desiredWidth);
-            zoomRect.setHeight(widthSign * desiredWidth / fractalRatio);
-        } else {
-            zoomRect.setWidth(heightSign * desiredHeight * fractalRatio);
-            zoomRect.setHeight(heightSign * desiredHeight);
+            // Do we need to translate or set translate to 0?
+            int moveX = desiredWidth < 0 ? -1 : 0;
+            int moveY = desiredHeight < 0 ? -1 : 0;
+
+            // Translate if necessary (thanks, ternary!)
+            zoomRect.setX(zoomRectStartX + moveX * zoomRect.getWidth());
+            zoomRect.setY(zoomRectStartY + moveY * zoomRect.getHeight());
         }
-
-        // Do we need to translate or set translate to 0?
-        int moveX = desiredWidth < 0 ? -1 : 0;
-        int moveY = desiredHeight < 0 ? -1 : 0;
-
-        // Translate if necessary (thanks, ternary!)
-        zoomRect.setX(zoomRectStartX + moveX * zoomRect.getWidth());
-        zoomRect.setY(zoomRectStartY + moveY * zoomRect.getHeight());
     }
 
 
@@ -343,13 +353,15 @@ public class Mandelbrot extends Application {
     private void zoomFromRect() {
         if (selectingZoom) {
             selectingZoom = false;
+
             if (zoomRect.getWidth() > 0 && zoomRect.getHeight() > 0) {
                 fractal.zoomIn(zoomRect.getX(), zoomRect.getY(), zoomRect.getWidth(), zoomRect.getHeight());
             }
+
+            zoomRect.setVisible(false);
+            zoomRect.setWidth(0);
+            zoomRect.setHeight(0);
         }
-        zoomRect.setVisible(false);
-        zoomRect.setWidth(0);
-        zoomRect.setHeight(0);
     }
 
     /**
