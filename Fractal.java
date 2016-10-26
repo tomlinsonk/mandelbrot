@@ -2,11 +2,11 @@ package mandelbrot;
 
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.concurrent.Task;
-import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import mandelbrot.brushes.SmoothBrush;
@@ -25,8 +25,9 @@ public class Fractal {
     double zoom;
     double juliaReSeed, juliaImSeed;
 
-    // Properties for UI input/display binding
     DoubleProperty zoomProperty;
+    DoubleProperty renderProgressProperty;
+    ObjectProperty<Image> imageProperty;
 
     int maxIterations;
     double colorOffset;
@@ -34,9 +35,6 @@ public class Fractal {
     boolean isJulia;
     Image image;
     Brush brush;
-
-    ImageView imageView;
-    ProgressIndicator indicator;
 
     Stack<FractalState> mandelbrotHistory;
     Stack<FractalState> juliaHistory;
@@ -47,19 +45,17 @@ public class Fractal {
      *
      * @param width     the width in pixels of the fractal
      * @param height    the height in pixels of the fractal
-     * @param imageView the view this fractal is displayed in
-     * @param indicator the progress indicator
      */
-    public Fractal(double width, double height, ImageView imageView, ProgressIndicator indicator) {
+    public Fractal(double width, double height) {
 
         mandelbrotHistory = new Stack<>();
         juliaHistory = new Stack<>();
 
         this.width = width;
         this.height = height;
-        this.imageView = imageView;
-        this.indicator = indicator;
 
+        renderProgressProperty = new SimpleDoubleProperty(0);
+        imageProperty = new SimpleObjectProperty<>();
 
         // Default values
         zoom = 400;
@@ -115,6 +111,41 @@ public class Fractal {
     }
 
     /**
+     * Turn julia set generation on and reset view parameters.
+     * @param xPixel
+     * @param yPixel
+     * @return A string of the re, im seed of this julia set
+     */
+    public String enableJulia(double xPixel, double yPixel) {
+        // Save the current state
+        mandelbrotHistory.push(new FractalState(this));
+
+        this.juliaReSeed = getRealComponent(xPixel);
+        this.juliaImSeed = getImaginaryComponent(yPixel);
+        this.isJulia = true;
+        zoom = 400;
+        zoomProperty.setValue(1);
+        reCenter = 0;
+        imCenter = 0;
+
+        generate();
+
+        return "Seed: " + String.format("%.3f", juliaReSeed) + (juliaImSeed >= 0 ? " + " : " - ") + String.format("%.3f", Math.abs(juliaImSeed)) + "i";
+    }
+
+    /**
+     * Return to the mandelbrot set where we left off
+     */
+    public void disableJulia() {
+        this.isJulia = false;
+        juliaHistory = new Stack<>();
+        if (!goToState(mandelbrotHistory.pop())) {
+            generate();
+        }
+    }
+
+
+    /**
      * These methods move the view of the fractal.
      * These methods will not run while a fractal is rendering.
      */
@@ -143,18 +174,52 @@ public class Fractal {
         generate();
     }
 
+    public void zoomInFixed() {
+        if (rendering) return;
+
+        if (isJulia) {
+            juliaHistory.push(new FractalState(this));
+        } else {
+            mandelbrotHistory.push(new FractalState(this));
+        }
+
+        zoom *= 2;
+        zoomProperty.set(zoomProperty.get() * 2);
+        generate();
+    }
+
+    public void zoomOutFixed() {
+        if (rendering) return;
+
+        if (isJulia) {
+            juliaHistory.push(new FractalState(this));
+        } else {
+            mandelbrotHistory.push(new FractalState(this));
+        }
+
+        zoom /= 2;
+        zoomProperty.set(zoomProperty.get() / 2);
+        generate();
+    }
+
     public void backToLastState() {
         if (rendering) return;
 
         if (isJulia) {
-            if (juliaHistory.empty()) return;
-            setValuesToState(juliaHistory.pop());
+            if (!juliaHistory.empty()) {
+                if (!goToState(juliaHistory.pop())) {
+                    generate();
+                }
+            }
+
         } else {
-            if (mandelbrotHistory.empty()) return;
-            setValuesToState(mandelbrotHistory.pop());
+            if (!mandelbrotHistory.empty()) {
+                if (!goToState(mandelbrotHistory.pop())) {
+                    generate();
+                }
+            }
         }
 
-        generate();
     }
 
     /**
@@ -256,7 +321,7 @@ public class Fractal {
                 // Send the new image to the view
                 image = newImage;
                 Platform.runLater(() -> {
-                    imageView.setImage(image);
+                    imageProperty.setValue(image);
                     rendering = false;
                 });
 
@@ -264,9 +329,7 @@ public class Fractal {
             }
         };
 
-
-        // Bind the indicator to the task and start it
-        indicator.progressProperty().bind(generateFractal.progressProperty());
+        renderProgressProperty.bind(generateFractal.progressProperty());
         new Thread(generateFractal).start();
     }
 
@@ -292,50 +355,22 @@ public class Fractal {
         return (height / zoom / 2.0 - imCenter) - (yPixel / zoom);
     }
 
-
-    /**
-     * Turn julia set generation on and reset view parameters.
-     * @param xPixel
-     * @param yPixel
-     * @return A string of the re, im seed of this julia set
-     */
-    public String enableJulia(double xPixel, double yPixel) {
-        // Save the current state
-        mandelbrotHistory.push(new FractalState(this));
-
-        this.juliaReSeed = getRealComponent(xPixel);
-        this.juliaImSeed = getImaginaryComponent(yPixel);
-        this.isJulia = true;
-        zoom = 400;
-        zoomProperty.setValue(1);
-        reCenter = 0;
-        imCenter = 0;
-
-        generate();
-
-        return "Seed: " + String.format("%.3f", juliaReSeed) + (juliaImSeed >= 0 ? " + " : " - ") + String.format("%.3f", Math.abs(juliaImSeed)) + "i";
-    }
-
-    /**
-     * Return to the mandelbrot set where we left off
-     */
-    public void disableJulia() {
-        this.isJulia = false;
-        setValuesToState(mandelbrotHistory.pop());
-        juliaHistory = new Stack<>();
-        generate();
-    }
-
-
     /**
      * Set this fractal's values to those stored in a FractalState
      * @param state
      */
-    private void setValuesToState(FractalState state) {
+    private boolean goToState(FractalState state) {
         zoom = state.zoom;
         reCenter = state.reCenter;
         imCenter = state.imCenter;
         zoomProperty.setValue(state.readableZoom);
-    }
 
+        if (state.isCompatible(this)) {
+            image = state.image;
+            imageProperty.setValue(image);
+            return true;
+        }
+
+        return false;
+    }
 }
