@@ -1,8 +1,8 @@
 package mandelbrot.brushes;
 
-import javafx.scene.paint.Color;
 import mandelbrot.Brush;
 
+import java.awt.*;
 import java.util.Random;
 
 /**
@@ -10,23 +10,23 @@ import java.util.Random;
  */
 public class BandedBrush extends Brush {
 
-    Color[] randomColors;
+    int[] randomColors;
 
     public BandedBrush(int maxIterations) {
         super(maxIterations);
 
         Random random = new Random();
-        randomColors = new Color[maxIterations];
+        randomColors = new int[maxIterations];
 
         for (int i = 0; i < maxIterations; i++) {
-            randomColors[i] = Color.rgb(random.nextInt(255), random.nextInt(255), random.nextInt(255));
+            randomColors[i] = new Color(random.nextInt(255), random.nextInt(255), random.nextInt(255)).getRGB();
         }
     }
 
     @Override
-    public Color getColor(int iteration, double escapeMagnitude, double offset) {
+    public int getColor(int iteration, double escapeMagnitude, float offset) {
         if (iteration == maxIterations) {
-            return Color.BLACK;
+            return 0;
         }
 
         return randomColors[(iteration + (int)(maxIterations * offset)) % maxIterations];

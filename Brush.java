@@ -1,7 +1,5 @@
 package mandelbrot;
 
-import javafx.scene.paint.Color;
-
 /**
  * Created by Kiran Tomlinson on 8/25/16.
  *
@@ -16,5 +14,5 @@ public abstract class Brush {
         this.maxIterations = maxIterations;
     }
 
-    public abstract Color getColor(int iteration, double escapeMagnitude, double offset);
+    public abstract int getColor(int iteration, double escapeMagnitude, float offset);
 }

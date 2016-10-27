@@ -1,17 +1,17 @@
 package mandelbrot;
 
 import javafx.application.Platform;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.concurrent.Task;
+import javafx.beans.property.*;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
-import javafx.scene.image.PixelWriter;
-import javafx.scene.image.WritableImage;
 import mandelbrot.brushes.SmoothBrush;
 
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Stack;
+import java.util.concurrent.*;
 
 /**
  * Created by Kiran Tomlinson on 8/25/16.
@@ -26,11 +26,11 @@ public class Fractal {
     double juliaReSeed, juliaImSeed;
 
     DoubleProperty zoomProperty;
-    DoubleProperty renderProgressProperty;
     ObjectProperty<Image> imageProperty;
+    StringProperty renderingProperty;
 
     int maxIterations;
-    double colorOffset;
+    float colorOffset;
     boolean rendering;
     boolean isJulia;
     Image image;
@@ -54,8 +54,8 @@ public class Fractal {
         this.width = width;
         this.height = height;
 
-        renderProgressProperty = new SimpleDoubleProperty(0);
         imageProperty = new SimpleObjectProperty<>();
+        renderingProperty = new SimpleStringProperty("");
 
         // Default values
         zoom = 400;
@@ -104,7 +104,7 @@ public class Fractal {
      *
      * @param colorOffset
      */
-    public void setColorOffset(double colorOffset) {
+    public void setColorOffset(float colorOffset) {
         if (rendering) return;
         this.colorOffset = colorOffset;
         generate();
@@ -152,25 +152,53 @@ public class Fractal {
 
     public void moveRight() {
         if (rendering) return;
-        reCenter += width / zoom / 10.0;
+
+        if (isJulia) {
+            juliaHistory.push(new FractalState(this));
+        } else {
+            mandelbrotHistory.push(new FractalState(this));
+        }
+
+        reCenter += width / zoom / 5.0;
         generate();
     }
 
     public void moveLeft() {
         if (rendering) return;
-        reCenter -= width / zoom / 10.0;
+
+        if (isJulia) {
+            juliaHistory.push(new FractalState(this));
+        } else {
+            mandelbrotHistory.push(new FractalState(this));
+        }
+
+        reCenter -= width / zoom / 5.0;
         generate();
     }
 
     public void moveUp() {
         if (rendering) return;
-        imCenter -= height / zoom / 10.0;
+
+        if (isJulia) {
+            juliaHistory.push(new FractalState(this));
+        } else {
+            mandelbrotHistory.push(new FractalState(this));
+        }
+
+        imCenter -= height / zoom / 5.0;
         generate();
     }
 
     public void moveDown() {
         if (rendering) return;
-        imCenter += height / zoom / 10.0;
+
+        if (isJulia) {
+            juliaHistory.push(new FractalState(this));
+        } else {
+            mandelbrotHistory.push(new FractalState(this));
+        }
+
+        imCenter += height / zoom / 5.0;
         generate();
     }
 
@@ -250,87 +278,128 @@ public class Fractal {
 
     /**
      * Method to generate the fractal based on current state.
-     * Uses a task so it runs in the background and sends progress to the indicator.
+     * Uses a thread so it runs in the background and sends progress to the indicator.
      */
     private void generate() {
+        rendering = true;
+        renderingProperty.setValue("Rendering...");
+        BufferedImage newImage = new BufferedImage((int)width, (int)height, BufferedImage.TYPE_INT_RGB);
 
-        Task generateFractal = new Task<Void>() {
+        new Thread(() -> {
+            try {
+                combineSlices(newImage);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
 
-            @Override
-            protected Void call() {
+    /**
+     * Creates an appropriate number of slice generator tasks based on the number of available cores.
+     * @param newImage
+     */
+    private void combineSlices(BufferedImage newImage) throws InterruptedException, ExecutionException {
 
-                // Don't allow other updates while rendering
-                Platform.runLater(() -> rendering = true);
+        long startTime = System.currentTimeMillis();
 
-                // Create image
-                WritableImage newImage = new WritableImage((int) width, (int) height);
-                PixelWriter pixels = newImage.getPixelWriter();
+        Collection<Callable<BufferedImage>> tasks = new ArrayList<>();
+        int processors = Runtime.getRuntime().availableProcessors();
 
-                // Iterate over every pixel on the screen, figure out if it's in the set, and color it
-                for (int xPixel = 0; xPixel < width; xPixel++) {
-                    for (int yPixel = 0; yPixel < height; yPixel++) {
+        int sliceWidth = (int)(width / processors);
+        for (int i = 0; i < processors; i++) {
+            GenerateFractalSliceTask task = new GenerateFractalSliceTask(sliceWidth * i , sliceWidth * (i + 1), 0, (int) height);
+            tasks.add(task);
+        }
 
-                        double re0, im0, re, im;
+        ExecutorService executor = Executors.newFixedThreadPool(processors);
+        List<Future<BufferedImage>> slices = executor.invokeAll(tasks);
 
-                        if (isJulia) {
-                            re0 = juliaReSeed;
-                            im0 = juliaImSeed;
-                            re = getRealComponent(xPixel);
-                            im = getImaginaryComponent(yPixel);
-                        } else {
-                            re0 = getRealComponent(xPixel);
-                            im0 = getImaginaryComponent(yPixel);
-                            re = 0;
-                            im = 0;
-                        }
 
-                        double reSqr = re * re;
-                        double imSqr = im * im;
+        int i = 0;
+        for (Future<BufferedImage> futureSlice : slices) {
+            BufferedImage slice = futureSlice.get();
+            newImage.createGraphics().drawImage(slice, sliceWidth * i, 0, null);
+            i++;
+        }
 
-                        double reLast = 0;
-                        double imLast = 0;
+        executor.shutdown();
 
-                        int iteration = 0;
+        Platform.runLater(() -> {
+            rendering = false;
+            renderingProperty.setValue("");
+            image = SwingFXUtils.toFXImage(newImage, null);
+            imageProperty.setValue(image);
+        });
 
-                        while (reSqr + imSqr < 4 && iteration < maxIterations) {
-                            im = 2 * (re * im) + im0;
-                            re = reSqr - imSqr + re0;
-                            reSqr = re * re;
-                            imSqr = im * im;
+        long endTime = System.currentTimeMillis();
+        long duration = (endTime - startTime);
+        System.out.println("Rendered in: " + duration + "ms");
+    }
 
-                            if (re == reLast && im == imLast) {
-                                iteration = maxIterations;
-                                break;
-                            }
+    /**
+     * This class is a worker that generates a slice of the Mandelbrot/Julia set.
+     */
+    private final class GenerateFractalSliceTask implements Callable<BufferedImage> {
+        int xPixelStart;
+        int xPixelEnd;
+        int yPixelStart;
+        int yPixelEnd;
 
-                            reLast = re;
-                            imLast = im;
-                            iteration++;
-                        }
+        GenerateFractalSliceTask(int xPixelStart, int xPixelEnd, int yPixelStart, int yPixelEnd) {
+            this.xPixelStart = xPixelStart;
+            this.xPixelEnd = xPixelEnd;
+            this.yPixelStart = yPixelStart;
+            this.yPixelEnd = yPixelEnd;
+        }
 
-                        double escapeMagnitude = Math.sqrt(reSqr + imSqr);
+        @Override
+        public BufferedImage call() throws Exception {
+            BufferedImage slice = new BufferedImage(xPixelEnd - xPixelStart, yPixelEnd - yPixelStart, BufferedImage.TYPE_INT_RGB);
 
-                        // Use the brush to pick a color
-                        pixels.setColor(xPixel, yPixel, brush.getColor(iteration, escapeMagnitude, colorOffset));
+            // Iterate over every pixel on the screen, figure out if it's in the set, and color it
+            for (int xPixel = xPixelStart; xPixel < xPixelEnd; xPixel++) {
+
+                for (int yPixel = yPixelStart; yPixel < yPixelEnd; yPixel++) {
+
+                    double re0, im0, re, im;
+
+                    if (isJulia) {
+                        re0 = juliaReSeed;
+                        im0 = juliaImSeed;
+                        re = getRealComponent(xPixel);
+                        im = getImaginaryComponent(yPixel);
+                    } else {
+                        re0 = getRealComponent(xPixel);
+                        im0 = getImaginaryComponent(yPixel);
+                        re = 0;
+                        im = 0;
                     }
 
-                    // Update the progress of this task
-                    updateProgress(xPixel, width);
+                    double reSqr = re * re;
+                    double imSqr = im * im;
+
+                    int iteration = 0;
+
+                    while (reSqr + imSqr < 4 && iteration < maxIterations) {
+                        im = 2 * (re * im) + im0;
+                        re = reSqr - imSqr + re0;
+                        reSqr = re * re;
+                        imSqr = im * im;
+
+                        iteration++;
+                    }
+
+                    double escapeMagnitude = Math.sqrt(reSqr + imSqr);
+
+                    // Use the brush to pick a color
+                    slice.setRGB(xPixel - xPixelStart, yPixel, brush.getColor(iteration, escapeMagnitude, colorOffset));
                 }
-
-                // Send the new image to the view
-                image = newImage;
-                Platform.runLater(() -> {
-                    imageProperty.setValue(image);
-                    rendering = false;
-                });
-
-                return null;
             }
-        };
 
-        renderProgressProperty.bind(generateFractal.progressProperty());
-        new Thread(generateFractal).start();
+            return slice;
+        }
     }
 
     /**
