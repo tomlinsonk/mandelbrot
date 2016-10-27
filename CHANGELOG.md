@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Updated instructions text
 - General code cleanup
+- Made SmoothBrush smoother
 
 ### Removed
 - Render progress indicator, due to multithreading issues
