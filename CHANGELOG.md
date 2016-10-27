@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## Unversioned
+## 1.3 - 2016-10-27
 ### Added
 - Selection rectangle to zoom in
 - Zoom history (separate for mandelbrot and julia sets)
