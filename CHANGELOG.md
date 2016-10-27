@@ -7,14 +7,20 @@ All notable changes to this project will be documented in this file.
 - Zoom history (separate for mandelbrot and julia sets)
 - Ability to go back in zoom history (backspace)
 - Image caching for fast back
+- Multithreaded slice-by-slice fractal generation (way faster)
+- Boolean rendering readout that displays when fractal is rendering 
 
 ### Changed
 - Updated instructions text
 - General code cleanup
 
+### Removed
+- Render progress indicator, due to multithreading issues
+
+
 ## 1.2 - 2016-10-11
 ### Added
-- Juilia set rendering
+- Julia set rendering
 - Ability to pick Julia set seed from the Mandelbrot image
 - Jump back to Mandelbrot when in Julia mode
 
