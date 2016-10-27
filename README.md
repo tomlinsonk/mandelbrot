@@ -38,3 +38,14 @@ the core fractal generating code. Here's how:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE)
 file for details
+
+## Gallery
+### Detail
+![](images/spiral.png)
+### Julia Sets
+![](images/julia1.png)
+![](images/julia2.png)
+![](images/julia3.png)
+![](images/julia4.png)
+![](images/julia5.png)
+![](images/julia6.png)
