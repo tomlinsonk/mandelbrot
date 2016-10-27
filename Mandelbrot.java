@@ -111,12 +111,6 @@ public class Mandelbrot extends Application {
         brushPicker.setValue(DEFAULT_BRUSH);
         brushPane.getChildren().addAll(brushLabel, brushPicker);
 
-        // Create progress indicator
-        ProgressIndicator renderIndicator = new ProgressIndicator(0);
-        renderIndicator.setPrefSize(SCREEN_WIDTH / 10, SCREEN_HEIGHT / 10);
-        renderIndicator.setVisible(true);
-        renderIndicator.progressProperty().bind(fractal.renderProgressProperty);
-
         // Create iteration slider
         VBox iterationPane = new VBox();
         iterationPane.setAlignment(Pos.CENTER);
@@ -155,12 +149,15 @@ public class Mandelbrot extends Application {
         // Create info panel
         VBox infoPane = new VBox();
         infoPane.setAlignment(Pos.CENTER);
+        Label renderReadout = new Label("");
+        renderReadout.setVisible(true);
+        renderReadout.textProperty().bind(fractal.renderingProperty);
         Label zoomReadout = new Label();
         zoomReadout.textProperty().bind(Bindings.format("Zoom: %.2G", fractal.zoomProperty));
         Label coordReadout = new Label();
         Label seedReadout = new Label();
         seedReadout.setVisible(false);
-        infoPane.getChildren().addAll(zoomReadout, coordReadout, seedReadout);
+        infoPane.getChildren().addAll(renderReadout, zoomReadout, coordReadout, seedReadout);
 
         // Create Julia button
         Button juliaButton = new Button("Generate Julia Set");
@@ -174,13 +171,13 @@ public class Mandelbrot extends Application {
         fractalPane.getChildren().add(zoomRect);
 
         // Add all items to toolbar
-        toolbar.getChildren().addAll(instructions, renderIndicator, infoPane, juliaButton, brushPane, colorPane, iterationPane, saveButton);
+        toolbar.getChildren().addAll(instructions, infoPane, juliaButton, brushPane, colorPane, iterationPane, saveButton);
 
         // Create event handlers
         scene.setOnKeyPressed(event -> handleKeyPress(event.getCode()));
         brushPicker.valueProperty().addListener((observable, oldValue, newValue) -> updateBrush(newValue));
         iterationSlider.setOnMouseReleased(event -> fractal.setMaxIterations((int)iterationSlider.getValue()));
-        colorSlider.setOnMouseReleased(event -> fractal.setColorOffset(colorSlider.getValue()));
+        colorSlider.setOnMouseReleased(event -> fractal.setColorOffset((float)colorSlider.getValue()));
         imageView.setOnMouseMoved(event -> coordReadout.setText(getMouseCoordinateString(event.getX(), event.getY())));
         fractalPane.setOnMousePressed(event -> createNewZoomRect(event.getX(), event.getY()));
         fractalPane.setOnMouseDragged(event -> resizeZoomRect(fractalPane, event.getX(), event.getY()));

@@ -1,7 +1,8 @@
 package mandelbrot.brushes;
 
-import javafx.scene.paint.Color;
 import mandelbrot.Brush;
+
+import java.awt.*;
 
 /**
  * Created by Kiran Tomlinson on 8/25/16.
@@ -13,13 +14,13 @@ public class ElegantBrush extends Brush {
     }
 
     @Override
-    public Color getColor(int iteration,  double escapeMagnitude, double offset) {
+    public int getColor(int iteration,  double escapeMagnitude, float offset) {
         if (iteration == maxIterations) {
-            return Color.BLACK;
+            return 0;
         }
 
         double brightness = 0.5 + 0.5 * Math.cos((iteration + offset * maxIterations / 10) * Math.PI / (double)maxIterations * 10f);
 
-        return Color.hsb(0, 0, brightness);
+        return Color.getHSBColor(0, 0, (float)brightness).getRGB();
     }
 }

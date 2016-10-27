@@ -1,7 +1,8 @@
 package mandelbrot.brushes;
 
-import javafx.scene.paint.Color;
 import mandelbrot.Brush;
+
+import java.awt.*;
 
 /**
  * Created by Kiran Tomlinson on 8/25/16.
@@ -13,15 +14,15 @@ public class SmoothBrush extends Brush {
     }
 
     @Override
-    public Color getColor(int iteration, double escapeMagnitude, double offset) {
+    public int getColor(int iteration, double escapeMagnitude, float offset) {
 
         if (iteration == maxIterations) {
-            return Color.BLACK;
+            return 0;
         }
 
-        double smooth = iteration + 1 - Math.log(Math.log(escapeMagnitude)) / Math.log(2);
+        double smooth = iteration + 1 - Math.log(Math.log(escapeMagnitude)) / Math.log(2.0);
 
 
-        return Color.hsb((offset * 360) + smooth, 0.6f, 1.0f);
+        return Color.getHSBColor(offset + (float)(smooth / maxIterations), 0.6f, 1.0f).getRGB();
     }
 }

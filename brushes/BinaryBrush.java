@@ -1,7 +1,8 @@
 package mandelbrot.brushes;
 
-import javafx.scene.paint.Color;
 import mandelbrot.Brush;
+
+import java.awt.*;
 
 /**
  * Created by Kiran Tomlinson on 8/25/16.
@@ -14,12 +15,12 @@ public class BinaryBrush extends Brush {
 
 
     @Override
-    public Color getColor(int iteration, double escapeMagnitude, double offset) {
+    public int getColor(int iteration, double escapeMagnitude, float offset) {
 
         if (iteration == maxIterations) {
-            return Color.BLACK;
+            return 0;
         }
 
-        return Color.hsb(offset * 360f, 0.6f, 1f);
+        return Color.getHSBColor(offset * 360f, 0.6f, 1f).getRGB();
     }
 }
