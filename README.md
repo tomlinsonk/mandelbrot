@@ -14,10 +14,7 @@ on the Mandelbrot Set.
 
 ## Usage
 
-The application is driven by a JavaFX GUI. Simply run the main method in 
-Mandelbrot.java to launch Mandelbrot. Use WASD to move the view around and +- to
-zoom in and out. You can also use the mouse to zoom! Additional controls are
-available in the toolbar on the right.
+To compile, run `javac */*.java` in the `mandelbrot/` directory. To run Mandlebrot, `cd ..` and run `java mandelbrot.core.Mandelbrot`.
 
 ## Contributing
 
