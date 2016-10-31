@@ -1,6 +1,6 @@
 package mandelbrot.brushes;
 
-import mandelbrot.Brush;
+import mandelbrot.core.Brush;
 
 import java.awt.*;
 

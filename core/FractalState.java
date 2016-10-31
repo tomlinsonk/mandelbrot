@@ -1,4 +1,4 @@
-package mandelbrot;
+package mandelbrot.core;
 
 import javafx.scene.image.Image;
 

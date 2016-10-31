@@ -1,4 +1,4 @@
-package mandelbrot;
+package mandelbrot.core;
 
 import javafx.application.Platform;
 import javafx.beans.property.*;

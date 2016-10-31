@@ -1,4 +1,4 @@
-package mandelbrot;
+package mandelbrot.core;
 
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
@@ -79,7 +79,7 @@ public class Mandelbrot extends Application {
 
         // Create the scene
         Scene scene = new Scene(windowPane, SCREEN_WIDTH, SCREEN_HEIGHT);
-        scene.getStylesheets().add(getClass().getResource("resources/stylesheet.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("../resources/stylesheet.css").toExternalForm());
 
         windowPane.setCenter(fractalPane);
         windowPane.setRight(toolbar);
@@ -142,7 +142,7 @@ public class Mandelbrot extends Application {
 
         // Create save button
         Button saveButton = new Button("Save Image");
-        Image saveIcon = new Image(getClass().getResourceAsStream("resources/save.png"), 20, 20, false, false);
+        Image saveIcon = new Image(getClass().getResourceAsStream("../resources/save.png"), 20, 20, false, false);
         saveButton.setGraphic(new ImageView(saveIcon));
         FileChooser fileChooser = new FileChooser();
 

@@ -1,4 +1,4 @@
-package mandelbrot;
+package mandelbrot.core;
 
 /**
  * Created by Kiran Tomlinson on 8/25/16.
