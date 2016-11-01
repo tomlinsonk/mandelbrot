@@ -250,6 +250,8 @@ public class Fractal {
     }
 
     public void setJuliaSeed(double reSeed, double imSeed) {
+        if (rendering) return;
+
         juliaReSeed = reSeed;
         juliaImSeed = imSeed;
         generate();

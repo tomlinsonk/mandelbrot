@@ -212,12 +212,16 @@ public class Mandelbrot extends Application {
                 juliaButton.setText("Generate Julia Set");
                 fractal.disableJulia();
                 seedReadout.setVisible(false);
+            } else if (pickingJuliaPoint) {
+                toolbar.getChildren().add(0, instructions);
+                toolbar.getChildren().remove(juliaView);
+                pickingJuliaPoint = false;
+                imageView.setOnMouseClicked(nextClick -> {});
+                juliaButton.setText("Generate Julia Set");
             } else {
                 juliaButton.setText("Click to pick a seed...");
-                if (!pickingJuliaPoint) {
-                    toolbar.getChildren().add(1, juliaView);
-                    toolbar.getChildren().remove(instructions);
-                }
+                toolbar.getChildren().add(1, juliaView);
+                toolbar.getChildren().remove(instructions);
                 pickingJuliaPoint = true;
                 imageView.setOnMouseClicked(click -> {
                     juliaButton.setText("Back to Mandelbrot");
@@ -295,7 +299,6 @@ public class Mandelbrot extends Application {
                 zoomRect.setWidth(0);
                 zoomRect.setHeight(0);
         }
-
     }
 
 
