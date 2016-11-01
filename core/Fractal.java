@@ -247,7 +247,12 @@ public class Fractal {
                 }
             }
         }
+    }
 
+    public void setJuliaSeed(double reSeed, double imSeed) {
+        juliaReSeed = reSeed;
+        juliaImSeed = imSeed;
+        generate();
     }
 
     /**
@@ -335,7 +340,7 @@ public class Fractal {
 
         long endTime = System.currentTimeMillis();
         long duration = (endTime - startTime);
-        System.out.println("Rendered in: " + duration + "ms");
+//        System.out.println("Rendered in: " + duration + "ms");
     }
 
     /**
