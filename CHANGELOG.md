@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## Unversioned
+### Added
+- Julia preview
+- Click on Julia button to cancel seed picking
+
 ## 1.3 - 2016-10-27
 ### Added
 - Selection rectangle to zoom in

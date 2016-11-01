@@ -44,6 +44,7 @@ public class Mandelbrot extends Application {
     double SCREEN_HEIGHT;
 
     Fractal fractal;
+    Fractal juliaPreview;
 
     Rectangle zoomRect;
     double zoomRectStartX, zoomRectStartY;
@@ -93,6 +94,15 @@ public class Mandelbrot extends Application {
         // Create new fractal
         fractal = new Fractal(SCREEN_WIDTH * 7 / 8, SCREEN_HEIGHT);
         imageView.imageProperty().bind(fractal.imageProperty);
+
+        // Create julia preview
+        ImageView juliaView = new ImageView();
+        juliaPreview = new Fractal(SCREEN_WIDTH * 1 / 8, SCREEN_HEIGHT / 5);
+        juliaPreview.reCenter = 0;
+        juliaPreview.isJulia = true;
+        juliaPreview.zoom = 80;
+        juliaPreview.setMaxIterations(100);
+        juliaView.imageProperty().bind(juliaPreview.imageProperty);
 
         // Create toolbar
         toolbar.setPrefWidth(SCREEN_WIDTH / 8);
@@ -178,10 +188,19 @@ public class Mandelbrot extends Application {
         brushPicker.valueProperty().addListener((observable, oldValue, newValue) -> updateBrush(newValue));
         iterationSlider.setOnMouseReleased(event -> fractal.setMaxIterations((int)iterationSlider.getValue()));
         colorSlider.setOnMouseReleased(event -> fractal.setColorOffset((float)colorSlider.getValue()));
-        imageView.setOnMouseMoved(event -> coordReadout.setText(getMouseCoordinateString(event.getX(), event.getY())));
         fractalPane.setOnMousePressed(event -> createNewZoomRect(event.getX(), event.getY()));
         fractalPane.setOnMouseDragged(event -> resizeZoomRect(fractalPane, event.getX(), event.getY()));
         fractalPane.setOnMouseReleased(event -> zoomFromRect());
+
+        colorSlider.setOnMouseReleased(event -> {
+            fractal.setColorOffset((float)colorSlider.getValue());
+            juliaPreview.setColorOffset((float)colorSlider.getValue());
+        });
+
+        imageView.setOnMouseMoved(event -> {
+            coordReadout.setText(getMouseCoordinateString(event.getX(), event.getY()));
+            if (pickingJuliaPoint) juliaPreview.setJuliaSeed(fractal.getRealComponent(event.getX()), fractal.getImaginaryComponent(event.getY()));
+        });
 
         saveButton.setOnAction(event -> {
             File file = fileChooser.showSaveDialog(stage);
@@ -193,14 +212,24 @@ public class Mandelbrot extends Application {
                 juliaButton.setText("Generate Julia Set");
                 fractal.disableJulia();
                 seedReadout.setVisible(false);
+            } else if (pickingJuliaPoint) {
+                toolbar.getChildren().add(0, instructions);
+                toolbar.getChildren().remove(juliaView);
+                pickingJuliaPoint = false;
+                imageView.setOnMouseClicked(nextClick -> {});
+                juliaButton.setText("Generate Julia Set");
             } else {
                 juliaButton.setText("Click to pick a seed...");
+                toolbar.getChildren().add(1, juliaView);
+                toolbar.getChildren().remove(instructions);
                 pickingJuliaPoint = true;
                 imageView.setOnMouseClicked(click -> {
                     juliaButton.setText("Back to Mandelbrot");
                     imageView.setOnMouseClicked(nextClick -> {});
                     seedReadout.setText(fractal.enableJulia(click.getX(), click.getY()));
                     seedReadout.setVisible(true);
+                    toolbar.getChildren().remove(juliaView);
+                    toolbar.getChildren().add(0, instructions);
                     pickingJuliaPoint = false;
                 });
             }
@@ -270,7 +299,6 @@ public class Mandelbrot extends Application {
                 zoomRect.setWidth(0);
                 zoomRect.setHeight(0);
         }
-
     }
 
 
@@ -282,15 +310,19 @@ public class Mandelbrot extends Application {
         switch (brushName) {
             case "Binary":
                 fractal.setBrush(new BinaryBrush(fractal.maxIterations));
+                juliaPreview.setBrush(new BinaryBrush(fractal.maxIterations));
                 break;
             case "Elegant":
                 fractal.setBrush(new ElegantBrush(fractal.maxIterations));
+                juliaPreview.setBrush(new ElegantBrush(fractal.maxIterations));
                 break;
             case "Banded":
                 fractal.setBrush(new BandedBrush(fractal.maxIterations));
+                juliaPreview.setBrush(new BandedBrush(fractal.maxIterations));
                 break;
             case "Smooth":
                 fractal.setBrush(new SmoothBrush(fractal.maxIterations));
+                juliaPreview.setBrush(new SmoothBrush(fractal.maxIterations));
                 break;
             default:
                 return;
