@@ -214,8 +214,10 @@ public class Mandelbrot extends Application {
                 seedReadout.setVisible(false);
             } else {
                 juliaButton.setText("Click to pick a seed...");
-                toolbar.getChildren().add(1, juliaView);
-                toolbar.getChildren().remove(instructions);
+                if (!pickingJuliaPoint) {
+                    toolbar.getChildren().add(1, juliaView);
+                    toolbar.getChildren().remove(instructions);
+                }
                 pickingJuliaPoint = true;
                 imageView.setOnMouseClicked(click -> {
                     juliaButton.setText("Back to Mandelbrot");
