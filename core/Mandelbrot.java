@@ -26,7 +26,7 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * Mandelbrot v1.3
+ * Mandelbrot v1.4
  *
  * Created by Kiran Tomlinson on 8/24/16.
  *
