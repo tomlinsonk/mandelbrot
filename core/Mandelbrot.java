@@ -6,7 +6,10 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -18,7 +21,11 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import mandelbrot.brushes.*;
+import mandelbrot.brushes.BandedBrush;
+import mandelbrot.brushes.BinaryBrush;
+import mandelbrot.brushes.ElegantBrush;
+import mandelbrot.brushes.SmoothBrush;
+import mandelbrot.fractal.Fractal;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -35,22 +42,22 @@ import java.io.IOException;
 public class Mandelbrot extends Application {
 
     // Constants
-    final String[] BRUSH_LIST = {"Smooth", "Elegant", "Banded", "Binary"};
-    final String DEFAULT_BRUSH = "Smooth";
-    final String INSTRUCTIONS = "WASD to move\ndrag mouse to zoom\nescape to cancel zoom\n+/- also zooms\nbackspace to go back";
+    private final String[] BRUSH_LIST = {"Smooth", "Elegant", "Banded", "Binary"};
+    private final String DEFAULT_BRUSH = "Smooth";
+    private final String INSTRUCTIONS = "WASD to move\ndrag mouse to zoom\nescape to cancel zoom\n+/- also zooms\nbackspace to go back";
 
 
-    double SCREEN_WIDTH;
-    double SCREEN_HEIGHT;
+    private double SCREEN_WIDTH;
+    private double SCREEN_HEIGHT;
 
-    Fractal fractal;
-    Fractal juliaPreview;
+    private Fractal fractal;
+    private Fractal juliaPreview;
 
-    Rectangle zoomRect;
-    double zoomRectStartX, zoomRectStartY;
+    private Rectangle zoomRect;
+    private double zoomRectStartX, zoomRectStartY;
 
-    boolean pickingJuliaPoint;
-    boolean selectingZoom;
+    private boolean pickingJuliaPoint;
+    private boolean selectingZoom;
 
 
 
@@ -97,10 +104,7 @@ public class Mandelbrot extends Application {
 
         // Create julia preview
         ImageView juliaView = new ImageView();
-        juliaPreview = new Fractal(SCREEN_WIDTH * 1 / 8, SCREEN_HEIGHT / 5);
-        juliaPreview.reCenter = 0;
-        juliaPreview.isJulia = true;
-        juliaPreview.zoom = 80;
+        juliaPreview = new Fractal(SCREEN_WIDTH * 1 / 8, SCREEN_HEIGHT / 5, 0, 0, true, 80);
         juliaPreview.setMaxIterations(100);
         juliaView.imageProperty().bind(juliaPreview.imageProperty);
 
@@ -208,7 +212,7 @@ public class Mandelbrot extends Application {
         });
 
         juliaButton.setOnAction(event -> {
-            if (fractal.isJulia) {
+            if (fractal.isJulia()) {
                 juliaButton.setText("Generate Julia Set");
                 fractal.disableJulia();
                 seedReadout.setVisible(false);
@@ -240,7 +244,7 @@ public class Mandelbrot extends Application {
      * Turns an x, y coordinate on the imageview into a coordinate string that shows the complex point at those coordinates
      * @param x
      * @param y
-     * @return
+     * @return a string displaying the mouse coordinates
      */
     private String getMouseCoordinateString(double x, double y) {
         double re = fractal.getRealComponent(x);
@@ -307,25 +311,24 @@ public class Mandelbrot extends Application {
      * @param brushName the name of the new brush
      */
     private void updateBrush(String brushName) {
+        int maxIterations = fractal.getMaxIterations();
         switch (brushName) {
             case "Binary":
-                fractal.setBrush(new BinaryBrush(fractal.maxIterations));
-                juliaPreview.setBrush(new BinaryBrush(fractal.maxIterations));
+                fractal.setBrush(new BinaryBrush(maxIterations));
+                juliaPreview.setBrush(new BinaryBrush(maxIterations));
                 break;
             case "Elegant":
-                fractal.setBrush(new ElegantBrush(fractal.maxIterations));
-                juliaPreview.setBrush(new ElegantBrush(fractal.maxIterations));
+                fractal.setBrush(new ElegantBrush(maxIterations));
+                juliaPreview.setBrush(new ElegantBrush(maxIterations));
                 break;
             case "Banded":
-                fractal.setBrush(new BandedBrush(fractal.maxIterations));
-                juliaPreview.setBrush(new BandedBrush(fractal.maxIterations));
+                fractal.setBrush(new BandedBrush(maxIterations));
+                juliaPreview.setBrush(new BandedBrush(maxIterations));
                 break;
             case "Smooth":
-                fractal.setBrush(new SmoothBrush(fractal.maxIterations));
-                juliaPreview.setBrush(new SmoothBrush(fractal.maxIterations));
+                fractal.setBrush(new SmoothBrush(maxIterations));
+                juliaPreview.setBrush(new SmoothBrush(maxIterations));
                 break;
-            default:
-                return;
         }
     }
 
@@ -355,7 +358,7 @@ public class Mandelbrot extends Application {
         if (selectingZoom && fractalPane.isHover()) {
             double desiredWidth = newX - zoomRectStartX;
             double desiredHeight = newY - zoomRectStartY;
-            double fractalRatio = fractal.width / fractal.height;
+            double fractalRatio = fractal.getWidth() / fractal.getHeight();
             double aspectRatio = Math.abs(desiredWidth / desiredHeight);
 
             // Do we need to negate width or height?
