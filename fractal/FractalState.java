@@ -1,7 +1,7 @@
 package mandelbrot.fractal;
 
 import javafx.scene.image.Image;
-import mandelbrot.core.Brush;
+import mandelbrot.brush.Brush;
 
 /**
  * Created by kiran on 10/25/16.

@@ -14,7 +14,7 @@ on the Mandelbrot Set.
 
 ## Usage
 
-To compile, run `javac */*.java` in the `mandelbrot/` directory. To run Mandlebrot, `cd ..` and run `java mandelbrot.core.Mandelbrot`.
+To compile, run `javac */*.java` in the `mandelbrot/` directory. To run Mandlebrot, `cd ..` and run `java mandelbrot.gui.Mandelbrot`.
 
 ## Contributing
 

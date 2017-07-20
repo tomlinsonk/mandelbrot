@@ -1,4 +1,4 @@
-package mandelbrot.core;
+package mandelbrot.brush;
 
 /**
  * Created by Kiran Tomlinson on 8/25/16.
@@ -8,7 +8,7 @@ package mandelbrot.core;
  */
 public abstract class Brush {
 
-    protected int maxIterations;
+    int maxIterations;
 
     public Brush(int maxIterations) {
         this.maxIterations = maxIterations;

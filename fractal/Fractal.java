@@ -4,8 +4,8 @@ import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
-import mandelbrot.brushes.SmoothBrush;
-import mandelbrot.core.Brush;
+import mandelbrot.brush.SmoothBrush;
+import mandelbrot.brush.Brush;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -388,14 +388,12 @@ public class Fractal {
         @Override
         public BufferedImage call() throws Exception {
             BufferedImage slice = new BufferedImage(xPixelEnd - xPixelStart, yPixelEnd - yPixelStart, BufferedImage.TYPE_INT_RGB);
+            double re0, im0, re, im, reSqr, imSqr, p;
 
             // Iterate over every pixel on the screen, figure out if it's in the set, and color it
             for (int xPixel = xPixelStart; xPixel < xPixelEnd; xPixel++) {
 
                 for (int yPixel = yPixelStart; yPixel < yPixelEnd; yPixel++) {
-
-                    double re0, im0, re, im;
-
                     if (isJulia) {
                         re0 = juliaReSeed;
                         im0 = juliaImSeed;
@@ -406,10 +404,16 @@ public class Fractal {
                         im0 = getImaginaryComponent(yPixel);
                         re = 0;
                         im = 0;
+
+                        p = Math.sqrt((re0 - 0.25) * (re0 - 0.25) + im0 * im0);
+                        if (re0 < p - 2 * p * p + 0.25 || (re0 + 1) * (re0 + 1) + im0 * im0 < 0.0625) {
+                            slice.setRGB(xPixel - xPixelStart, yPixel, brush.getColor(maxIterations, 0, colorOffset));
+                            continue;
+                        }
                     }
 
-                    double reSqr = re * re;
-                    double imSqr = im * im;
+                    reSqr = re * re;
+                    imSqr = im * im;
 
                     int iteration = 0;
 

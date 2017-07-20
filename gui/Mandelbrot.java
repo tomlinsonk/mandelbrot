@@ -1,4 +1,4 @@
-package mandelbrot.core;
+package mandelbrot.gui;
 
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
@@ -21,10 +21,10 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import mandelbrot.brushes.BandedBrush;
-import mandelbrot.brushes.BinaryBrush;
-import mandelbrot.brushes.ElegantBrush;
-import mandelbrot.brushes.SmoothBrush;
+import mandelbrot.brush.BandedBrush;
+import mandelbrot.brush.BinaryBrush;
+import mandelbrot.brush.ElegantBrush;
+import mandelbrot.brush.SmoothBrush;
 import mandelbrot.fractal.Fractal;
 
 import javax.imageio.ImageIO;
@@ -58,8 +58,6 @@ public class Mandelbrot extends Application {
 
     private boolean pickingJuliaPoint;
     private boolean selectingZoom;
-
-
 
     /**
      * Method to start the application. Opens a window and creates all view objects
@@ -142,7 +140,7 @@ public class Mandelbrot extends Application {
         iterationLabel.textProperty().bind(Bindings.format("Max Iterations: %.0f", iterationSlider.valueProperty()));
         iterationPane.getChildren().addAll(iterationLabel, iterationSlider);
 
-        // Create iteration slider
+        // Create color slider
         VBox colorPane = new VBox();
         colorPane.setAlignment(Pos.CENTER);
         Slider colorSlider = new Slider();
@@ -401,6 +399,7 @@ public class Mandelbrot extends Application {
             zoomRect.setHeight(0);
         }
     }
+
 
     /**
      * Main method. This is the entry point of the application.

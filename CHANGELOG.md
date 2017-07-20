@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 
 ## Unversioned
+## Changed
+- Repo refactor
+
+## 1.4 2017-6-15
 ### Added
 - Julia preview
 - Click on Julia button to cancel seed picking
