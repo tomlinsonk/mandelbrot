@@ -16,10 +16,6 @@ public abstract class Brush {
 
     public abstract int getColor(int iteration, double escapeMagnitude, float offset);
 
-    public int getMaxIterations() {
-        return maxIterations;
-    }
-
     public void setMaxIterations(int maxIterations) {
         this.maxIterations = maxIterations;
     }
