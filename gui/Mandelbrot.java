@@ -5,6 +5,7 @@ import javafx.beans.binding.Bindings;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -17,6 +18,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 import javafx.stage.Screen;
@@ -26,11 +28,13 @@ import mandelbrot.brush.BinaryBrush;
 import mandelbrot.brush.ElegantBrush;
 import mandelbrot.brush.SmoothBrush;
 import mandelbrot.fractal.Fractal;
+import mandelbrot.fractal.Point;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * Mandelbrot v1.4
@@ -41,11 +45,12 @@ import java.io.IOException;
  */
 public class Mandelbrot extends Application {
 
+    private enum State {NOMINAL, PICKING_JULIA_POINT, CREATING_PATH, SELECTING_ZOOM};
+
     // Constants
     private final String[] BRUSH_LIST = {"Smooth", "Elegant", "Banded", "Binary"};
     private final String DEFAULT_BRUSH = "Smooth";
     private final String INSTRUCTIONS = "WASD to move\ndrag mouse to zoom\nescape to cancel zoom\n+/- also zooms\nbackspace to go back";
-
 
     private double SCREEN_WIDTH;
     private double SCREEN_HEIGHT;
@@ -56,8 +61,7 @@ public class Mandelbrot extends Application {
     private Rectangle zoomRect;
     private double zoomRectStartX, zoomRectStartY;
 
-    private boolean pickingJuliaPoint;
-    private boolean selectingZoom;
+    private State state;
 
     /**
      * Method to start the application. Opens a window and creates all view objects
@@ -66,8 +70,7 @@ public class Mandelbrot extends Application {
      */
     @Override
     public void start(Stage stage) throws Exception {
-        pickingJuliaPoint = false;
-        selectingZoom = false;
+        state = State.NOMINAL;
         zoomRectStartX = 0;
         zoomRectStartY = 0;
 
@@ -174,6 +177,9 @@ public class Mandelbrot extends Application {
         // Create Julia button
         Button juliaButton = new Button("Generate Julia Set");
 
+        // Create animation button
+        Button animationButton = new Button("Create Julia Animation");
+
         // Setup zoom rectangle
         zoomRect = new Rectangle();
         zoomRect.setStroke(Color.WHITE);
@@ -183,7 +189,7 @@ public class Mandelbrot extends Application {
         fractalPane.getChildren().add(zoomRect);
 
         // Add all items to toolbar
-        toolbar.getChildren().addAll(instructions, infoPane, juliaButton, brushPane, colorPane, iterationPane, saveButton);
+        toolbar.getChildren().addAll(instructions, infoPane, juliaButton, animationButton, brushPane, colorPane, iterationPane, saveButton);
 
         // Create event handlers
         scene.setOnKeyPressed(event -> handleKeyPress(event.getCode()));
@@ -201,7 +207,7 @@ public class Mandelbrot extends Application {
 
         imageView.setOnMouseMoved(event -> {
             coordReadout.setText(getMouseCoordinateString(event.getX(), event.getY()));
-            if (pickingJuliaPoint) juliaPreview.setJuliaSeed(fractal.getRealComponent(event.getX()), fractal.getImaginaryComponent(event.getY()));
+            if (state == State.PICKING_JULIA_POINT) juliaPreview.setJuliaSeed(fractal.getRealComponent(event.getX()), fractal.getImaginaryComponent(event.getY()));
         });
 
         saveButton.setOnAction(event -> {
@@ -214,17 +220,17 @@ public class Mandelbrot extends Application {
                 juliaButton.setText("Generate Julia Set");
                 fractal.disableJulia();
                 seedReadout.setVisible(false);
-            } else if (pickingJuliaPoint) {
+            } else if (state == State.PICKING_JULIA_POINT) {
                 toolbar.getChildren().add(0, instructions);
                 toolbar.getChildren().remove(juliaView);
-                pickingJuliaPoint = false;
+                state = State.NOMINAL;
                 imageView.setOnMouseClicked(nextClick -> {});
                 juliaButton.setText("Generate Julia Set");
-            } else {
+            } else if (state == state.NOMINAL){
+                state = State.PICKING_JULIA_POINT;
                 juliaButton.setText("Click to pick a seed...");
                 toolbar.getChildren().add(1, juliaView);
                 toolbar.getChildren().remove(instructions);
-                pickingJuliaPoint = true;
                 imageView.setOnMouseClicked(click -> {
                     juliaButton.setText("Back to Mandelbrot");
                     imageView.setOnMouseClicked(nextClick -> {});
@@ -232,9 +238,37 @@ public class Mandelbrot extends Application {
                     seedReadout.setVisible(true);
                     toolbar.getChildren().remove(juliaView);
                     toolbar.getChildren().add(0, instructions);
-                    pickingJuliaPoint = false;
+                    state = State.NOMINAL;
                 });
             }
+        });
+
+        animationButton.setOnAction(event -> {
+            if (state != State.NOMINAL) return;
+            state = State.CREATING_PATH;
+            ArrayList<Point> path = new ArrayList();
+            imageView.setOnMousePressed(click -> {
+                Point prevClick = new Point(fractal.getRealComponent(click.getX()), fractal.getImaginaryComponent(click.getY()));
+                path.add(prevClick);
+                imageView.setOnMousePressed(nextClick -> {});
+                imageView.setOnMouseDragged(nextClick -> {
+                    Point newClick = new Point(fractal.getRealComponent(nextClick.getX()), fractal.getImaginaryComponent(nextClick.getY()));
+                    path.add(newClick);
+
+                    Line line = new Line(nextClick.getX(), nextClick.getY(), nextClick.getX(), nextClick.getY());
+                    line.setFill(null);
+                    line.setStroke(Color.WHITE);
+                    line.setStrokeWidth(2);
+                    fractalPane.getChildren().add(line);
+                });
+                imageView.setOnMouseReleased(nextClick -> {
+                    imageView.setOnMouseDragged(c -> {});
+                    imageView.setOnMouseReleased(c -> {});
+                    state = State.NOMINAL;
+                    System.out.println(path.size());
+                    fractalPane.getChildren().removeIf(x -> x instanceof Line);
+                });
+            });
         });
     }
 
@@ -296,7 +330,7 @@ public class Mandelbrot extends Application {
                 fractal.backToLastState();
                 break;
             case ESCAPE:
-                selectingZoom = false;
+                if (state == State.SELECTING_ZOOM) state = State.NOMINAL;
                 zoomRect.setVisible(false);
                 zoomRect.setWidth(0);
                 zoomRect.setHeight(0);
@@ -336,14 +370,14 @@ public class Mandelbrot extends Application {
      * @param clickY
      */
     private void createNewZoomRect(double clickX, double clickY) {
-        if (!pickingJuliaPoint) {
+        if (state == State.NOMINAL) {
             zoomRect.setX(clickX);
             zoomRect.setY(clickY);
             zoomRectStartX = clickX;
             zoomRectStartY = clickY;
 
             zoomRect.setVisible(true);
-            selectingZoom = true;
+            state = State.SELECTING_ZOOM;
         }
     }
 
@@ -353,7 +387,7 @@ public class Mandelbrot extends Application {
      * @param newY new y coord of mouse
      */
     private void resizeZoomRect(AnchorPane fractalPane, double newX, double newY) {
-        if (selectingZoom && fractalPane.isHover()) {
+        if (state == State.SELECTING_ZOOM && fractalPane.isHover()) {
             double desiredWidth = newX - zoomRectStartX;
             double desiredHeight = newY - zoomRectStartY;
             double fractalRatio = fractal.getWidth() / fractal.getHeight();
@@ -387,8 +421,8 @@ public class Mandelbrot extends Application {
      * Zooms in based on the current zoom rectangle
      */
     private void zoomFromRect() {
-        if (selectingZoom) {
-            selectingZoom = false;
+        if (state == State.SELECTING_ZOOM) {
+            state = State.NOMINAL;
 
             if (zoomRect.getWidth() > 0 && zoomRect.getHeight() > 0) {
                 fractal.zoomIn(zoomRect.getX(), zoomRect.getY(), zoomRect.getWidth(), zoomRect.getHeight());
