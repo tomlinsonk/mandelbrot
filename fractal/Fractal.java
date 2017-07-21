@@ -1,10 +1,11 @@
-package mandelbrot.core;
+package mandelbrot.fractal;
 
 import javafx.application.Platform;
 import javafx.beans.property.*;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
-import mandelbrot.brushes.SmoothBrush;
+import mandelbrot.brush.SmoothBrush;
+import mandelbrot.brush.Brush;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -20,28 +21,28 @@ import java.util.concurrent.*;
  */
 public class Fractal {
 
-    double width, height;
-    double reCenter, imCenter;
-    double zoom;
-    double juliaReSeed, juliaImSeed;
+    private double width, height;
+    private double reCenter, imCenter;
+    private double zoom;
+    private double juliaReSeed, juliaImSeed;
 
-    DoubleProperty zoomProperty;
-    ObjectProperty<Image> imageProperty;
-    StringProperty renderingProperty;
+    private int maxIterations;
+    private float colorOffset;
+    private boolean rendering;
+    private boolean isJulia;
+    private Image image;
+    private Brush brush;
 
-    int maxIterations;
-    float colorOffset;
-    boolean rendering;
-    boolean isJulia;
-    Image image;
-    Brush brush;
+    private Stack<FractalState> mandelbrotHistory;
+    private Stack<FractalState> juliaHistory;
 
-    Stack<FractalState> mandelbrotHistory;
-    Stack<FractalState> juliaHistory;
+    public DoubleProperty zoomProperty;
+    public ObjectProperty<Image> imageProperty;
+    public StringProperty renderingProperty;
 
 
     /**
-     * Constructor
+     * Basic constructor
      *
      * @param width     the width in pixels of the fractal
      * @param height    the height in pixels of the fractal
@@ -75,6 +76,55 @@ public class Fractal {
         generate();
     }
 
+    /**
+     * More powerful constructor
+     *
+     * @param width of the fractal in pixels
+     * @param height of the fractal in pixels
+     * @param reCenter center position on the real axis
+     * @param imCenter center position of the imaginary axis
+     * @param isJulia true if it's a Julia set, false if it's Mandelbrot
+     * @param zoom factor
+     */
+    public Fractal(double width, double height, double reCenter, double imCenter, boolean isJulia, double zoom) {
+        this.width = width;
+        this.height = height;
+        this.reCenter = reCenter;
+        this.imCenter = imCenter;
+        this.isJulia = isJulia;
+        this.zoom = zoom;
+
+        mandelbrotHistory = new Stack<>();
+        juliaHistory = new Stack<>();
+
+        imageProperty = new SimpleObjectProperty<>();
+        renderingProperty = new SimpleStringProperty("");
+
+        juliaImSeed = 0;
+        juliaReSeed = 0;
+
+        zoomProperty = new SimpleDoubleProperty(1);
+        colorOffset = 0;
+        rendering = false;
+        maxIterations = 1000;
+        brush = new SmoothBrush(maxIterations);
+
+        // Create fractal
+        generate();
+    }
+
+
+    public double getWidth() {
+        return width;
+    }
+
+    public double getHeight() {
+        return height;
+    }
+
+    public boolean isJulia() {
+        return isJulia;
+    }
 
     /**
      * Set the max iterations of the fractal and the brush
@@ -84,8 +134,13 @@ public class Fractal {
     public void setMaxIterations(int maxIterations) {
         if (rendering) return;
         this.maxIterations = maxIterations;
-        brush.maxIterations = maxIterations;
+        brush.setMaxIterations(maxIterations);
         generate();
+    }
+
+
+    public int getMaxIterations() {
+        return maxIterations;
     }
 
     /**
@@ -118,7 +173,7 @@ public class Fractal {
      */
     public String enableJulia(double xPixel, double yPixel) {
         // Save the current state
-        mandelbrotHistory.push(new FractalState(this));
+        updateHistory();
 
         this.juliaReSeed = getRealComponent(xPixel);
         this.juliaImSeed = getImaginaryComponent(yPixel);
@@ -152,65 +207,35 @@ public class Fractal {
 
     public void moveRight() {
         if (rendering) return;
-
-        if (isJulia) {
-            juliaHistory.push(new FractalState(this));
-        } else {
-            mandelbrotHistory.push(new FractalState(this));
-        }
-
+        updateHistory();
         reCenter += width / zoom / 5.0;
         generate();
     }
 
     public void moveLeft() {
         if (rendering) return;
-
-        if (isJulia) {
-            juliaHistory.push(new FractalState(this));
-        } else {
-            mandelbrotHistory.push(new FractalState(this));
-        }
-
+        updateHistory();
         reCenter -= width / zoom / 5.0;
         generate();
     }
 
     public void moveUp() {
         if (rendering) return;
-
-        if (isJulia) {
-            juliaHistory.push(new FractalState(this));
-        } else {
-            mandelbrotHistory.push(new FractalState(this));
-        }
-
+        updateHistory();
         imCenter -= height / zoom / 5.0;
         generate();
     }
 
     public void moveDown() {
         if (rendering) return;
-
-        if (isJulia) {
-            juliaHistory.push(new FractalState(this));
-        } else {
-            mandelbrotHistory.push(new FractalState(this));
-        }
-
+        updateHistory();
         imCenter += height / zoom / 5.0;
         generate();
     }
 
     public void zoomInFixed() {
         if (rendering) return;
-
-        if (isJulia) {
-            juliaHistory.push(new FractalState(this));
-        } else {
-            mandelbrotHistory.push(new FractalState(this));
-        }
-
+        updateHistory();
         zoom *= 2;
         zoomProperty.set(zoomProperty.get() * 2);
         generate();
@@ -218,13 +243,7 @@ public class Fractal {
 
     public void zoomOutFixed() {
         if (rendering) return;
-
-        if (isJulia) {
-            juliaHistory.push(new FractalState(this));
-        } else {
-            mandelbrotHistory.push(new FractalState(this));
-        }
-
+        updateHistory();
         zoom /= 2;
         zoomProperty.set(zoomProperty.get() / 2);
         generate();
@@ -266,12 +285,7 @@ public class Fractal {
      */
     public void zoomIn(double xPixel, double yPixel, double pixelWidth, double pixelHeight) {
         if (rendering) return;
-
-        if (isJulia) {
-            juliaHistory.push(new FractalState(this));
-        } else {
-            mandelbrotHistory.push(new FractalState(this));
-        }
+        updateHistory();
 
         // Find the new center and zoom level
         reCenter = getRealComponent(xPixel + pixelWidth / 2);
@@ -280,6 +294,18 @@ public class Fractal {
         zoomProperty.set(zoomProperty.get() * width / pixelWidth);
 
         generate();
+    }
+
+
+    /**
+     * Push a FractalState to the appropriate history stack.
+     */
+    private void updateHistory() {
+        if (isJulia) {
+            juliaHistory.push(new FractalState(this, reCenter, imCenter, zoom, brush, colorOffset, maxIterations, image));
+        } else {
+            mandelbrotHistory.push(new FractalState(this, reCenter, imCenter, zoom, brush, colorOffset, maxIterations, image));
+        }
     }
 
 
@@ -295,9 +321,7 @@ public class Fractal {
         new Thread(() -> {
             try {
                 combineSlices(newImage);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
+            } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
         }).start();
@@ -364,14 +388,12 @@ public class Fractal {
         @Override
         public BufferedImage call() throws Exception {
             BufferedImage slice = new BufferedImage(xPixelEnd - xPixelStart, yPixelEnd - yPixelStart, BufferedImage.TYPE_INT_RGB);
+            double re0, im0, re, im, reSqr, imSqr, p;
 
             // Iterate over every pixel on the screen, figure out if it's in the set, and color it
             for (int xPixel = xPixelStart; xPixel < xPixelEnd; xPixel++) {
 
                 for (int yPixel = yPixelStart; yPixel < yPixelEnd; yPixel++) {
-
-                    double re0, im0, re, im;
-
                     if (isJulia) {
                         re0 = juliaReSeed;
                         im0 = juliaImSeed;
@@ -382,10 +404,16 @@ public class Fractal {
                         im0 = getImaginaryComponent(yPixel);
                         re = 0;
                         im = 0;
+
+                        p = Math.sqrt((re0 - 0.25) * (re0 - 0.25) + im0 * im0);
+                        if (re0 < p - 2 * p * p + 0.25 || (re0 + 1) * (re0 + 1) + im0 * im0 < 0.0625) {
+                            slice.setRGB(xPixel - xPixelStart, yPixel, brush.getColor(maxIterations, 0, colorOffset));
+                            continue;
+                        }
                     }
 
-                    double reSqr = re * re;
-                    double imSqr = im * im;
+                    reSqr = re * re;
+                    imSqr = im * im;
 
                     int iteration = 0;
 
@@ -441,7 +469,7 @@ public class Fractal {
         imCenter = state.imCenter;
         zoomProperty.setValue(state.readableZoom);
 
-        if (state.isCompatible(this)) {
+        if (state.isCompatible(brush, colorOffset, maxIterations)) {
             image = state.image;
             imageProperty.setValue(image);
             return true;

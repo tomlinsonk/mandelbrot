@@ -1,6 +1,4 @@
-package mandelbrot.brushes;
-
-import mandelbrot.core.Brush;
+package mandelbrot.brush;
 
 import java.awt.*;
 import java.util.Random;
@@ -10,7 +8,7 @@ import java.util.Random;
  */
 public class BandedBrush extends Brush {
 
-    int[] randomColors;
+    private int[] randomColors;
 
     public BandedBrush(int maxIterations) {
         super(maxIterations);
