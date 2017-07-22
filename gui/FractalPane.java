@@ -7,7 +7,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import mandelbrot.fractal.Fractal;
-import mandelbrot.fractal.Point;
+import mandelbrot.util.Coordinate;
 import mandelbrot.util.State;
 import mandelbrot.util.GuiState;
 
@@ -77,13 +77,13 @@ public class FractalPane extends AnchorPane implements Observer {
                     imageView.setOnMouseClicked(next -> {});
                 });
             } else if (oldState == State.MANDELBROT && newState == State.CREATING_PATH) {
-                ArrayList<Point> path = new ArrayList();
+                ArrayList<Coordinate> path = new ArrayList();
                 imageView.setOnMousePressed(click -> {
-                    Point prevClick = new Point(fractal.getRealComponent(click.getX()), fractal.getImaginaryComponent(click.getY()));
+                    Coordinate prevClick = new Coordinate(fractal.getRealComponent(click.getX()), fractal.getImaginaryComponent(click.getY()));
                     path.add(prevClick);
                     imageView.setOnMousePressed(nextClick -> {});
                     imageView.setOnMouseDragged(nextClick -> {
-                        Point newClick = new Point(fractal.getRealComponent(nextClick.getX()), fractal.getImaginaryComponent(nextClick.getY()));
+                        Coordinate newClick = new Coordinate(fractal.getRealComponent(nextClick.getX()), fractal.getImaginaryComponent(nextClick.getY()));
                         path.add(newClick);
 
                         Line line = new Line(nextClick.getX(), nextClick.getY(), nextClick.getX(), nextClick.getY());
