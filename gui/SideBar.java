@@ -17,8 +17,8 @@ import mandelbrot.brush.ElegantBrush;
 import mandelbrot.brush.SmoothBrush;
 import mandelbrot.fractal.Fractal;
 import mandelbrot.util.Coordinate;
-import mandelbrot.util.MandelbrotState;
 import mandelbrot.util.State;
+import mandelbrot.util.GuiState;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -149,13 +149,70 @@ public class SideBar extends VBox implements Observer {
         animationButton.setOnAction(event -> animationButtonClicked());
     }
 
-    private void animationButtonClicked() {
-        if (mandelbrot.state.get() != MandelbrotState.MANDELBROT) return;
-        mandelbrot.state.set(MandelbrotState.CREATING_PATH);
+
+    @Override
+    public void update(Observable o, Object args) {
+        if (o instanceof Coordinate) {
+            double x = ((double[]) args)[0];
+            double y = ((double[]) args)[1];
+            coordReadout.setText(getMouseCoordinateString(x, y));
+            if (mandelbrot.state.get() == State.PICKING_JULIA_POINT) {
+                juliaPreview.setJuliaSeed(fractal.getRealComponent(x), fractal.getImaginaryComponent(y));
+            }
+        } else if (o instanceof GuiState) {
+            State oldState = ((State[]) args)[0];
+            State newState = ((State[]) args)[1];
+
+            if (oldState == State.PICKING_JULIA_POINT && newState == State.MANDELBROT) {
+                getChildren().add(0, instructions);
+                getChildren().remove(juliaView);
+                juliaButton.setText("Generate Julia Set");
+                animationButton.setVisible(true);
+            } else if (oldState == State.PICKING_JULIA_POINT && newState == State.JULIA) {
+                juliaButton.setText("Back to Mandelbrot");
+                seedReadout.setText(fractal.enableJulia(mandelbrot.juliaCoords.getX(), mandelbrot.juliaCoords.getY()));
+                seedReadout.setVisible(true);
+                getChildren().remove(juliaView);
+                getChildren().add(0, instructions);
+            }
+
+
+        }
+
     }
 
+    /**
+     * Begin path creation mode.
+     */
+    private void animationButtonClicked() {
+        if (mandelbrot.state.get() != State.MANDELBROT) return;
+        mandelbrot.state.set(State.CREATING_PATH);
+    }
 
+    /**
+     * Depending on the state, enter or exit Julia mode
+     */
+    private void juliaButtonClicked() {
+        if (mandelbrot.state.get() == State.JULIA) {
+            juliaButton.setText("Generate Julia Set");
+            fractal.disableJulia();
+            seedReadout.setVisible(false);
+            animationButton.setVisible(true);
+            mandelbrot.state.set(State.MANDELBROT);
+        } else if (mandelbrot.state.get() == State.PICKING_JULIA_POINT) {
+            mandelbrot.state.set(State.MANDELBROT);
+        } else if (mandelbrot.state.get() == State.MANDELBROT){
+            juliaButton.setText("Click to pick a seed...");
+            getChildren().add(1, juliaView);
+            getChildren().remove(instructions);
+            animationButton.setVisible(false);
+            mandelbrot.state.set(State.PICKING_JULIA_POINT);
+        }
+    }
 
+    /**
+     * Update the color offsets of the visible fractals.
+     */
     private void updateColorOffset() {
         fractal.setColorOffset((float)colorSlider.getValue());
         juliaPreview.setColorOffset((float)colorSlider.getValue());
@@ -187,54 +244,6 @@ public class SideBar extends VBox implements Observer {
         }
     }
 
-    private void juliaButtonClicked() {
-        if (mandelbrot.state.get() == MandelbrotState.JULIA) {
-            juliaButton.setText("Generate Julia Set");
-            fractal.disableJulia();
-            seedReadout.setVisible(false);
-            animationButton.setVisible(true);
-            mandelbrot.state.set(MandelbrotState.MANDELBROT);
-        } else if (mandelbrot.state.get() == MandelbrotState.PICKING_JULIA_POINT) {
-            mandelbrot.state.set(MandelbrotState.MANDELBROT);
-        } else if (mandelbrot.state.get() == MandelbrotState.MANDELBROT){
-            juliaButton.setText("Click to pick a seed...");
-            getChildren().add(1, juliaView);
-            getChildren().remove(instructions);
-            animationButton.setVisible(false);
-            mandelbrot.state.set(MandelbrotState.PICKING_JULIA_POINT);
-        }
-    }
-
-    @Override
-    public void update(Observable o, Object args) {
-        if (o instanceof Coordinate) {
-            double x = ((double[]) args)[0];
-            double y = ((double[]) args)[1];
-            coordReadout.setText(getMouseCoordinateString(x, y));
-            if (mandelbrot.state.get() == MandelbrotState.PICKING_JULIA_POINT) {
-                juliaPreview.setJuliaSeed(fractal.getRealComponent(x), fractal.getImaginaryComponent(y));
-            }
-        } else if (o instanceof State) {
-            MandelbrotState oldState = ((MandelbrotState[]) args)[0];
-            MandelbrotState newState = ((MandelbrotState[]) args)[1];
-
-            if (oldState == MandelbrotState.PICKING_JULIA_POINT && newState == MandelbrotState.MANDELBROT) {
-                getChildren().add(0, instructions);
-                getChildren().remove(juliaView);
-                juliaButton.setText("Generate Julia Set");
-                animationButton.setVisible(true);
-            } else if (oldState == MandelbrotState.PICKING_JULIA_POINT && newState == MandelbrotState.JULIA) {
-                juliaButton.setText("Back to Mandelbrot");
-                seedReadout.setText(fractal.enableJulia(mandelbrot.juliaCoords.getX(), mandelbrot.juliaCoords.getY()));
-                seedReadout.setVisible(true);
-                getChildren().remove(juliaView);
-                getChildren().add(0, instructions);
-            }
-
-
-        }
-
-    }
 
     /**
      * Turns an x, y coordinate on the imageview into a coordinate string that shows the complex point at those coordinates

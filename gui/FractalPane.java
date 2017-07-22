@@ -8,8 +8,8 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import mandelbrot.fractal.Fractal;
 import mandelbrot.fractal.Point;
-import mandelbrot.util.MandelbrotState;
 import mandelbrot.util.State;
+import mandelbrot.util.GuiState;
 
 import java.util.ArrayList;
 import java.util.Observable;
@@ -43,7 +43,7 @@ public class FractalPane extends AnchorPane implements Observer {
         mandelbrot.state.addObserver(this);
 
         imageView = new ImageView();
-        this.getChildren().add(imageView);
+        getChildren().add(imageView);
         imageView.imageProperty().bind(fractal.imageProperty);
 
         // Setup zoom rectangle
@@ -52,20 +52,68 @@ public class FractalPane extends AnchorPane implements Observer {
         zoomRect.setFill(null);
         zoomRect.setVisible(false);
         zoomRect.toFront();
-        this.getChildren().add(zoomRect);
+        getChildren().add(zoomRect);
 
-        this.setOnMousePressed(event -> createNewZoomRect(event.getX(), event.getY()));
-        this.setOnMouseDragged(event -> resizeZoomRect(event.getX(), event.getY()));
-        this.setOnMouseReleased(event -> zoomFromRect());
-        this.setOnKeyPressed(event -> handleKeyPress(event.getCode()));
-
+        setOnMousePressed(event -> createNewZoomRect(event.getX(), event.getY()));
+        setOnMouseDragged(event -> resizeZoomRect(event.getX(), event.getY()));
+        setOnMouseReleased(event -> zoomFromRect());
+        setOnKeyPressed(event -> handleKeyPress(event.getCode()));
         imageView.setOnMouseMoved(event -> mandelbrot.mouseCoords.set(event.getX(), event.getY()));
     }
 
+
+    @Override
+    public void update(Observable o, Object args) {
+        if (o instanceof GuiState) {
+            State oldState = ((State[]) args)[0];
+            State newState = ((State[]) args)[1];
+
+            if (oldState == State.PICKING_JULIA_POINT && newState == State.MANDELBROT) {
+                imageView.setOnMouseClicked(click -> {});
+            } else if (oldState == State.MANDELBROT && newState == State.PICKING_JULIA_POINT) {
+                imageView.setOnMouseClicked(click -> {
+                    mandelbrot.juliaCoords.set(click.getX(), click.getY());
+                    mandelbrot.state.set(State.JULIA);
+                    imageView.setOnMouseClicked(next -> {});
+                });
+            } else if (oldState == State.MANDELBROT && newState == State.CREATING_PATH) {
+                ArrayList<Point> path = new ArrayList();
+                imageView.setOnMousePressed(click -> {
+                    Point prevClick = new Point(fractal.getRealComponent(click.getX()), fractal.getImaginaryComponent(click.getY()));
+                    path.add(prevClick);
+                    imageView.setOnMousePressed(nextClick -> {});
+                    imageView.setOnMouseDragged(nextClick -> {
+                        Point newClick = new Point(fractal.getRealComponent(nextClick.getX()), fractal.getImaginaryComponent(nextClick.getY()));
+                        path.add(newClick);
+
+                        Line line = new Line(nextClick.getX(), nextClick.getY(), nextClick.getX(), nextClick.getY());
+                        line.setFill(null);
+                        line.setStroke(Color.WHITE);
+                        line.setStrokeWidth(2);
+                        getChildren().add(line);
+                    });
+                    imageView.setOnMouseReleased(nextClick -> {
+                        imageView.setOnMouseDragged(c -> {});
+                        imageView.setOnMouseReleased(c -> {});
+                        mandelbrot.state.set(State.MANDELBROT);
+                        System.out.println(path.size());
+                        getChildren().removeIf(x -> x instanceof Line);
+                    });
+                });
+            }
+
+        }
+    }
+
+
+    /**
+     * Handle any FractalPane-specific key presses
+     * @param key
+     */
     private void handleKeyPress(KeyCode key) {
         if (key == KeyCode.ESCAPE) {
-            if (mandelbrot.state.get() == MandelbrotState.SELECTING_ZOOM) {
-                mandelbrot.state.set(MandelbrotState.MANDELBROT);
+            if (mandelbrot.state.get() == State.SELECTING_ZOOM) {
+                mandelbrot.state.set(State.MANDELBROT);
             }
 
             zoomRect.setVisible(false);
@@ -80,14 +128,14 @@ public class FractalPane extends AnchorPane implements Observer {
      * @param clickY
      */
     private void createNewZoomRect(double clickX, double clickY) {
-        if (mandelbrot.state.get() == MandelbrotState.MANDELBROT) {
+        if (mandelbrot.state.get() == State.MANDELBROT) {
             zoomRect.setX(clickX);
             zoomRect.setY(clickY);
             zoomRectStartX = clickX;
             zoomRectStartY = clickY;
 
             zoomRect.setVisible(true);
-            mandelbrot.state.set(MandelbrotState.SELECTING_ZOOM);
+            mandelbrot.state.set(State.SELECTING_ZOOM);
         }
     }
 
@@ -97,7 +145,7 @@ public class FractalPane extends AnchorPane implements Observer {
      * @param newY new y coord of mouse
      */
     private void resizeZoomRect(double newX, double newY) {
-        if (mandelbrot.state.get() == MandelbrotState.SELECTING_ZOOM && this.isHover()) {
+        if (mandelbrot.state.get() == State.SELECTING_ZOOM && this.isHover()) {
             double desiredWidth = newX - zoomRectStartX;
             double desiredHeight = newY - zoomRectStartY;
             double fractalRatio = fractal.getWidth() / fractal.getHeight();
@@ -131,8 +179,8 @@ public class FractalPane extends AnchorPane implements Observer {
      * Zooms in based on the current zoom rectangle
      */
     private void zoomFromRect() {
-        if (mandelbrot.state.get() == MandelbrotState.SELECTING_ZOOM) {
-            mandelbrot.state.set(MandelbrotState.MANDELBROT);
+        if (mandelbrot.state.get() == State.SELECTING_ZOOM) {
+            mandelbrot.state.set(State.MANDELBROT);
 
             if (zoomRect.getWidth() > 0 && zoomRect.getHeight() > 0) {
                 fractal.zoomIn(zoomRect.getX(), zoomRect.getY(), zoomRect.getWidth(), zoomRect.getHeight());
@@ -144,46 +192,4 @@ public class FractalPane extends AnchorPane implements Observer {
         }
     }
 
-    @Override
-    public void update(Observable o, Object args) {
-        if (o instanceof State) {
-            MandelbrotState oldState = ((MandelbrotState[]) args)[0];
-            MandelbrotState newState = ((MandelbrotState[]) args)[1];
-
-            if (oldState == MandelbrotState.PICKING_JULIA_POINT && newState == MandelbrotState.MANDELBROT) {
-                imageView.setOnMouseClicked(click -> {});
-            } else if (oldState == MandelbrotState.MANDELBROT && newState == MandelbrotState.PICKING_JULIA_POINT) {
-                imageView.setOnMouseClicked(click -> {
-                    mandelbrot.juliaCoords.set(click.getX(), click.getY());
-                    mandelbrot.state.set(MandelbrotState.JULIA);
-                    imageView.setOnMouseClicked(next -> {});
-                });
-            } else if (oldState == MandelbrotState.MANDELBROT && newState == MandelbrotState.CREATING_PATH) {
-                ArrayList<Point> path = new ArrayList();
-                imageView.setOnMousePressed(click -> {
-                    Point prevClick = new Point(fractal.getRealComponent(click.getX()), fractal.getImaginaryComponent(click.getY()));
-                    path.add(prevClick);
-                    imageView.setOnMousePressed(nextClick -> {});
-                    imageView.setOnMouseDragged(nextClick -> {
-                        Point newClick = new Point(fractal.getRealComponent(nextClick.getX()), fractal.getImaginaryComponent(nextClick.getY()));
-                        path.add(newClick);
-
-                        Line line = new Line(nextClick.getX(), nextClick.getY(), nextClick.getX(), nextClick.getY());
-                        line.setFill(null);
-                        line.setStroke(Color.WHITE);
-                        line.setStrokeWidth(2);
-                        getChildren().add(line);
-                    });
-                    imageView.setOnMouseReleased(nextClick -> {
-                        imageView.setOnMouseDragged(c -> {});
-                        imageView.setOnMouseReleased(c -> {});
-                        mandelbrot.state.set(MandelbrotState.MANDELBROT);
-                        System.out.println(path.size());
-                        getChildren().removeIf(x -> x instanceof Line);
-                    });
-                });
-            }
-
-        }
-    }
 }

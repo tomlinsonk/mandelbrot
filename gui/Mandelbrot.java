@@ -4,16 +4,11 @@ import javafx.application.Application;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Line;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import mandelbrot.fractal.Fractal;
-import mandelbrot.fractal.Point;
 import mandelbrot.util.Coordinate;
-import mandelbrot.util.State;
-
-import java.util.ArrayList;
+import mandelbrot.util.GuiState;
 
 /**
  * Mandelbrot v1.4
@@ -24,7 +19,7 @@ import java.util.ArrayList;
  */
 public class Mandelbrot extends Application {
 
-    public State state;
+    public GuiState state;
     public Coordinate mouseCoords;
     public Coordinate juliaCoords;
 
@@ -40,7 +35,7 @@ public class Mandelbrot extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         this.stage = stage;
-        state = new State();
+        state = new GuiState();
         mouseCoords = new Coordinate(0, 0);
         juliaCoords = new Coordinate(0, 0);
 
@@ -82,8 +77,6 @@ public class Mandelbrot extends Application {
     public Stage getStage() {
         return stage;
     }
-
-
 
 
     /**
